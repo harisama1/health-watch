@@ -1,0 +1,5 @@
+(fp_lib_table
+  (version 7)
+  (lib (name "HW_Watch")(type "KiCad")(uri "${KIPRJMOD}/../HW_Watch.pretty")(options "")(descr ""))
+  (lib (name "HW_IC")(type "KiCad")(uri "${KIPRJMOD}/../HW_IC.pretty")(options "")(descr ""))
+)
