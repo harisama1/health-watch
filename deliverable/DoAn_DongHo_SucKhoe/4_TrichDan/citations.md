@@ -17,7 +17,7 @@ Số trang = trang PDF (trùng số in trên trang; riêng HDG: số in = PDF �
 | TXS | TI TXS0108E datasheet SCES642L | `datasheets/LCSC_C17206_TXS0108E.pdf` |
 | LP | TI LP5907 datasheet | `datasheets/LCSC_C92498_LP5907-1.8.pdf` |
 | W25 | Winbond W25Q128JV datasheet | `datasheets/LCSC_C97521_W25Q128JVSIQ.pdf` |
-| SFH | OSRAM SFH 7013 datasheet (Chinese edition) v1.3 | `datasheets/OSRAM_SFH7013.pdf` |
+| SFH | OSRAM SFH 7016 datasheet v1.5 | `datasheets/OSRAM_SFH7016.pdf` |
 | VEMD | Vishay VEMD8080 datasheet rev 1.0 | `datasheets/LCSC_C511402_VEMD8080.pdf` |
 | LC6 | ST USBLC6-2 datasheet | `datasheets/LCSC_C7519_USBLC6-2SC6.pdf` |
 | TYC | USB-C receptacle TYPE-C-31-M-12 drawing | `datasheets/LCSC_C165948_TYPE-C-31-M-12.pdf` |
@@ -45,8 +45,8 @@ Số trang = trang PDF (trùng số in trên trang; riêng HDG: số in = PDF �
 | MAX86141 VLED 3.1-5.5 V | 3.1 V | MAX p.6 (LCSC_C5328762_MAX86141.pdf) | `LED Supply Voltage\s+VLED\s+Verified during PSRR Test\s+3\.1\s+5\.5` | OK |
 | MAX86141 SPI tối đa | 4 MHz | MAX p.8 (LCSC_C5328762_MAX86141.pdf) | `SCLK Frequency\s+fSCLK\s+4\s+MHz` | OK |
 | MAX86141 VIH | 1.4 V | MAX p.8 (LCSC_C5328762_MAX86141.pdf) | `Input Voltage High\s+VIH\s+SDI, SCLK, CSB, GPIO1, GPIO2\s+1\.4` | OK |
-| MAX86141 abs max VDD | 2.2 V | MAX p.4 (LCSC_C5328762_MAX86141.pdf) | `VDD_DIG to GND_ANA\. \.+-0\.3V to \+2\.2V` | OK |
-| SFH 7013 VF xanh lá max | 3.35 V | SFH p.3 (OSRAM_SFH7013.pdf) | `VF\s+典型值\s+3\.00 V.*?最大值\s+3\.35 V` | OK |
+| MAX86141 abs max VDD | 2.2 V | MAX p.4 (LCSC_C5328762_MAX86141.pdf) | `VDD_DIG to GND_ANA[. ]+-0\.3V to \+2\.2V` | OK |
+| SFH 7016 VF xanh lá max | 2.8 V | SFH p.5 (OSRAM_SFH7016.pdf) | `Forward voltage.*?max\.\s+2\.80 V` | OK |
 | BMI270 acc+gyro normal | 0.685 mA | BMI p.11 (Bosch_BMI270_datasheet.pdf) | `A\+G Normal Mode.*?685` | OK |
 | BMI270 acc normal (ODR max) | 0.21 mA | BMI p.11 (Bosch_BMI270_datasheet.pdf) | `Aonly Normal Mode.*?210` | OK |
 | BMI270 địa chỉ I2C | 104  | BMI p.128 (Bosch_BMI270_datasheet.pdf) | `0b1101000 \(0x68\)` | OK |
@@ -84,8 +84,9 @@ Số trang = trang PDF (trùng số in trên trang; riêng HDG: số in = PDF �
 | C110 | 1uF | AXP Fig 7-1 p.57 |
 | L101 | 1uH 2.5A | AXP Fig 7-1 p.57, §6.6 p.22 (3 MHz) |
 | C111 | 22uF 6.3V | AXP Fig 7-1 p.57 |
-| L102 | 1uH 2.5A | WS p.1 (LP2, RP2); AXP Fig 7-1 p.57 |
-| R105 | 0R | WS p.1 (RP2) |
+| L102 | 1uH 2.5A | WS p.1 (LP2, RP1, RP2); AXP Fig 6-1 p.17, Fig 7-1 p.57 |
+| R105 | 0R 0805 | WS p.1 (RP2); AXP p.12 |
+| R126 | 0R 0805 | WS p.1 (RP1); AXP Fig 6-1 p.17 |
 | RT101 | NTC 10k B3950 | AXP Table 4-1 p.8 (pin 31 TS); WS p.1 (RP4) |
 | R106 | 4.7k | AXP Table 4-1 p.8 (pin 38) |
 | R107 | 2.2k | AXP Table 4-1 p.9 (pin 39 "needs a 2.2kΩ pull high") |
@@ -104,11 +105,11 @@ Số trang = trang PDF (trùng số in trên trang; riêng HDG: số in = PDF �
 | TP105 | TP | - |
 | TP106 | TP | - |
 | TP107 | TP | - |
-| U103 | TPS61240DRVT | TPS p.1, p.3 (chân), §10.2.2 p.12 (CIN 2.2 µF, COUT 4.7 µF, L 1 µH); MAX p.6 (VLED 3.1-5.5 V); SFH p.3 (VF green max 3.35 V) |
+| U103 | TPS61240DRVT | TPS p.1, p.3 (chân), §10.2.2 p.12 (CIN 2.2 µF, COUT 4.7 µF, L 1 µH); MAX p.6 (VLED 3.1-5.5 V); SFH p.5 (VF green max 2.80 V), p.8 (đồ thị VF) |
 | L103 | 1uH 1A | TPS §10.2.2 p.12 (L = 1 µH) |
 | C113 | 2.2uF | TPS §10.2.2 p.12 |
 | C114 | 4.7uF | TPS §10.2.2 p.12 |
-| R113 | 100k | DS §3 Table 3-1 p.32 (GPIO3 strapping) |
+| R113 | 1M | DS §3 Table 3-1 p.32 (GPIO3 strapping); TPS p.5 (dòng EN) |
 | R114 | 0.1R 1% 0603 | yêu cầu đo dòng (user) |
 | TP108 | TP | - |
 | TP109 | TP | - |
@@ -132,7 +133,7 @@ Số trang = trang PDF (trùng số in trên trang; riêng HDG: số in = PDF �
 | L105 | 24nH | HDG §1.3.5 p.10; WS p.1 (R10 24nH) |
 | C125 | 22pF C0G | HDG §1.3.5 p.11 |
 | C126 | 22pF C0G | HDG §1.3.5 p.11 |
-| U105 | W25Q128JVSIQ | W25 p.1, §3 (chân SOIC-8 208 mil); DS §3.3 Table 3-4 p.34 (VDD_SPI theo GPIO45); WS p.1 (U2) |
+| U105 | W25Q128JVSIQ | W25 p.1, §3 (chân SOIC-8 208 mil); DS §3.2 Table 3-4 p.34 (VDD_SPI theo GPIO45); WS p.1 (U2) |
 | C127 | 100nF | W25 |
 | C128 | 1.5pF C0G | HDG §1.3.6 Table 6 p.13 |
 | L106 | 2.4nH | HDG §1.3.6 Table 6 p.13 |
@@ -161,13 +162,18 @@ Số trang = trang PDF (trùng số in trên trang; riêng HDG: số in = PDF �
 | Q102 | AO3400A | - |
 | R122 | 100 | - |
 | R123 | 100k | DS §3 Table 3-1 p.32, Table 3-4 p.34 (GPIO45) |
-| BZ101 | CMT-8504-100-SMT | CUI CMT-8504 (ASSUME, chưa tải) |
+| BZ101 | CMT-8504-100-SMT-TR | DigiKey CMT-8504-100-SMT-TR (datasheet chưa tải được) |
 | D103 | BAT54WS | - |
 | SW104 | TS-1088 4x3mm | DS §2.3 p.23-24 (RTC GPIO) |
 | R124 | 10k | - |
 | C137 | 100nF | - |
 | R125 | 1k | - |
 | D104 | Green 0603 | yêu cầu user |
+| TP110 | TP | - |
+| TP111 | TP | - |
+| TP112 | TP | - |
+| TP113 | TP | - |
+| TP114 | TP | - |
 | J105 | FH12-16S-0.5SH | Hirose FH12 (footprint KiCad) |
 
 ## 3. Trích dẫn theo linh kiện - Health watch - sensor board
@@ -180,25 +186,24 @@ Số trang = trang PDF (trùng số in trên trang; riêng HDG: số in = PDF �
 | C203 | 100nF | ASSUME |
 | U201 | LP5907MFX-1.8 | LP p.1 (noise, PSRR); MAX p.6 (VDD 1.7-2.0 V), p.7 (shutdown 0.6 µA) |
 | C204 | 1uF | LP p.6 (điều kiện đo CIN = COUT = 1 µF) |
-| C205 | 1uF | LP p.6 (COUT 1 µF) |
+| C205 | 1uF | LP p.7 (COUT, ESR) |
 | R201 | 0.1R 1% 0603 | yêu cầu đo dòng (user) |
 | TP201 | TP | - |
 | TP202 | TP | - |
 | TP203 | TP | - |
-| U202 | MAX86141ENP+ | MAX p.1, p.6 (VLED, VDD), p.8 (SPI 4 MHz, VIH 1.4 V), p.11 (bump map), p.12 (chân) |
+| U202 | MAX86141ENP+T | MAX p.1, p.6 (VLED, VDD), p.8 (SPI 4 MHz, VIH 1.4 V), p.11 (bump map), p.12 (chân) |
 | C206 | 1uF | MAX p.12 (VREF) |
 | C207 | 100nF | MAX p.12 (VDD_ANA) |
 | C208 | 10uF 10V | MAX p.12 (VDD_ANA) |
 | C209 | 100nF | MAX p.12 (VDD_DIG); sơ đồ khối MAX p.40 |
-| D201 | SFH 7013 | SFH p.1, p.3 (VF), p.9 (chân); MAX p.12 (nối LED) |
+| D201 | SFH 7016 | SFH p.3-5 (bước sóng, VF), p.11-12 (xung), p.13-14 (chân, pad); MAX p.12 (nối LED) |
 | D202 | VEMD8080 | VEMD p.1, p.4 (chân); MAX p.12 (PD1_IN) |
 | D203 | VEMD8080 | VEMD p.4; MAX p.12 (PD2_IN, chỉ MAX86141) |
-| U203 | TXS0108EPWR | TXS p.1, p.4 (chân), §7.3.5 p.18 (pull-up 4k/40k nội), §8.3 p.20 (OE, VCCA ≤ VCCB); MAX p.4 (abs max 2.2 V), DS Table 5-4 p.65 (VIH = 0.75·VDD) |
-| R202 | 100k | TXS §8.3 p.20 |
-| C210 | 100nF | TXS §8.3 p.20 |
+| R205 | 0R | MAX p.12 (PD_GND), p.88 (shorting via / 0 Ω, Note 3) |
+| U203 | TXS0108EPWR | TXS p.1, p.4 (chân), p.6 (OE: VIH, Δt/Δv ≤ 10 ns/V), §7.3.5 p.18 (pull-up 4k/40k nội), §8.3 p.20 (VCCA ≤ VCCB); MAX p.8 (mức logic), DS Table 5-4 p.65 (VIH = 0.75·VDD) |
 | C211 | 100nF | TXS §8.4 |
 | C212 | 100nF | TXS §8.4 |
-| U204 | MAX30208CLB+ | M30 p.1, p.6 (chân), Table 3 p.10 (địa chỉ) |
+| U204 | MAX30208CLB+ | M30 p.1, p.2 (reflow, sai số), p.6 (chân), p.7 (lắp đặt), Table 3 p.10 (địa chỉ) |
 | C213 | 100nF | M30 p.6 (VDD) |
 | R203 | 10k | M30 Table 2-3 p.10 |
 | R204 | 10k | M30 Table 2-3 p.10 |

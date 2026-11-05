@@ -1,6 +1,6 @@
-"""Markdown report -> HTML -> PDF (LibreOffice headless). Needs the `markdown` package and `soffice` on PATH.
+"""Markdown report -> HTML -> PDF (google-chrome headless if installed, else flatpak LibreOffice). Needs the `markdown` package.
 Usage: python3 tools/md2pdf.py docs/airmouse_schematic_report.md [...]   (PDFs go to outputs/)"""
-import base64, os, re, subprocess, sys, tempfile
+import base64, os, re, shutil, subprocess, sys, tempfile
 import markdown
 
 CSS = """body{font-family:'DejaVu Sans',Arial,sans-serif;font-size:9.5pt;line-height:1.35;color:#111}
@@ -19,7 +19,12 @@ for md in sys.argv[1:]:
     page = '<!doctype html><html><head><meta charset="utf-8"><style>%s</style></head><body>%s</body></html>' % (CSS, body)
     html_path = os.path.splitext(src)[0] + '.html'          # next to the .md so relative image links resolve
     open(html_path, 'w', encoding='utf-8').write(page)
+    pdf_path = os.path.join(os.path.abspath(out_dir), os.path.basename(os.path.splitext(src)[0]) + '.pdf')
     with tempfile.TemporaryDirectory() as tmp:
+      if shutil.which('google-chrome'):
+        subprocess.run(['google-chrome', '--headless=new', '--disable-gpu', '--no-pdf-header-footer', '--user-data-dir=' + tmp,
+                        '--print-to-pdf=' + pdf_path, 'file://' + html_path], check=True, capture_output=True)
+      else:
         subprocess.run(['flatpak', 'run', '--filesystem=host', '--filesystem=/tmp', 'org.libreoffice.LibreOffice', '--headless', '-env:UserInstallation=file://' + tmp, '--convert-to', 'pdf:writer_web_pdf_Export',
                         '--outdir', os.path.abspath(out_dir), html_path], check=True, capture_output=True)
     os.remove(html_path)

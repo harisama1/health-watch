@@ -115,8 +115,8 @@ def sheet_main_power(S):
     F(S, 'PMIC AXP2101 + pin + shunt đo dòng', 52, 9, 146, 78)
     S.place('U102', gp(112, 36), text='below')
     # VBUS from the connector: one wire along the top of the sheet
-    W(S, (24, 14), (104, 14), (104, 25), ('U102', '37')); cap(S, 'C101', 80, 14)
-    W(S, ('U102', '36'), (102, 26), (102, 17), (85, 17)); cap(S, 'C102', 85, 17)
+    W(S, (24, 14), (104, 14), (104, 25), ('U102', '37')); cap(S, 'C101', 80, 14); pw(S, 'VBUS', 60, 14, 'up')
+    W(S, ('U102', '36'), (102, 26), (102, 17), (85, 17)); cap(S, 'C102', 85, 17); pw(S, 'VMID', 94, 17, 'up')
     W(S, ('U102', '34'), (100, 27), (100, 21), (88, 21)); cap(S, 'C103', 97, 21); cap(S, 'C104', 92, 21); pw(S, 'VSYS', 88, 21, 'up')
     stair(S, 'U102', 'l', {
         '37': [('X', 1)], '36': [('X', 3)], '34': [('X', 5)],
@@ -136,6 +136,7 @@ def sheet_main_power(S):
     # chains of the dense left pins, drawn where there is room (connected by local labels)
     W(S, (58, 40), (60, 40)); lb(S, 'AXP_SW', 58, 40, 'left'); o = part2(S, 'L102', 60, 40, '1', 'right'); W(S, o, (65, 40))
     o = part2(S, 'R105', 65, 40, '1', 'right'); W(S, o, (70, 40)); pw(S, 'VSYS', 70, 40, 'right')
+    pw(S, 'VMID', 81, 44, 'up'); cap(S, 'R126', 81, 44); T(S, 'R126: VMID-VSYS, không lắp', 84, 45)
     T(S, 'SW (DCDC5) nối như bo Waveshare', 56, 37)
     W(S, (58, 45), (60, 45)); lb(S, 'CHGLED', 58, 45, 'left'); o = part2(S, 'D101', 60, 45, '1', 'right'); W(S, o, (65, 45))
     o = part2(S, 'R110', 65, 45, '2', 'right'); W(S, o, (70, 45)); pw(S, 'VSYS', 70, 45, 'right')
@@ -218,6 +219,8 @@ def sheet_main_periph(S):
     for n, y in (('21', 35), ('22', 36), ('23', 37), ('24', 38)): W(S, ('J104', n), (27, y))
     W(S, (27, 35), (27, 38)); W(S, (27, 36), (14, 36)); cap(S, 'C132', 22, 36); cap(S, 'C133', 18, 36); pw(S, '+3V3', 14, 36, 'up')
     T(S, 'QSPI + I2C chung', 6, 52)
+    F(S, 'Điểm đo bus (bring-up)', 82, 60, 112, 76)
+    for i, r_ in enumerate(('TP110', 'TP111', 'TP112', 'TP113', 'TP114')): S.place(r_, gp(86 + 5 * i, 64), pin='1')
     # ---------------- BMI270
     F(S, 'IMU BMI270 + RTC PCF85063A', 40, 12, 80, 56)
     S.place('U106', gp(60, 25))
@@ -241,12 +244,12 @@ def sheet_main_periph(S):
     W(S, ('U103', '3'), (104, 25), (104, 24)); W(S, ('U103', '2'), (110, 24)); cap(S, 'C114', 106, 24)
     S.place('TP108', gp(108, 24), pin='1')
     o = part2(S, 'R114', 110, 24, '1', 'right'); W(S, o, (120, 24)); S.place('TP109', gp(116, 24), pin='1'); pw(S, 'VLED', 120, 24, 'up')
-    T(S, 'EN = GPIO3, kéo xuống 100k: tắt khi ngủ', 84, 31)
+    T(S, 'EN = GPIO3, kéo xuống 1 MΩ; giữ bằng RTC hold khi ngủ', 84, 31)
     T(S, 'I_LED = V(TP108-TP109) / 0.1 Ω', 104, 31)
     # ---------------- FPC to the sensor board
     F(S, 'FPC 16P sang bo cảm biến', 128, 9, 160, 46)
     S.place('J105', gp(150, 15), pin='1')
-    T(S, 'Cáp FFC loại B: chân 1 ↔ chân 1', 129, 42)
+    T(S, 'Cáp đảo đưa 5 V vào chân tín hiệu: đo thông mạch trước khi cấp nguồn', 129, 42)
 FALLBACK['periph'] = (g(82), g(60))
 
 def sheet_main_ui(S):
@@ -279,7 +282,7 @@ def sheet_main_ui(S):
 
 # ============================================================== sensor board
 def sheet_sensor(S):
-    T(S, 'Bo cảm biến: LDO 1.8 V nhiễu thấp → MAX86141; LED SFH 7013 (xanh/đỏ/IR) và 2 photodiode nối thẳng vào AFE; SPI 1.8 V ↔ 3.3 V qua TXS0108E; MAX30208 nhiệt độ da.', 5, 4.6)
+    T(S, 'Bo cảm biến: LDO 1.8 V nhiễu thấp → MAX86141; LED SFH 7016 (xanh/đỏ/IR) và 2 photodiode nối thẳng vào AFE; SPI 1.8 V ↔ 3.3 V qua TXS0108E; MAX30208 nhiệt độ da.', 5, 4.6)
     F(S, 'FPC 16P nối bo chính', 4, 9, 36, 48)
     S.place('J201', gp(26, 15), pin='1')
     pw(S, '+3V3', 8, 38, 'up'); cap(S, 'C201', 8, 38)
@@ -296,23 +299,24 @@ def sheet_sensor(S):
     # AFE + optics
     F(S, 'MAX86141 + LED + photodiode', 40, 36, 96, 72)
     S.place('U202', gp(74, 55))
-    S.place('D201', gp(60, 52), pin='1')
-    for a, b in (('1', 'D1'), ('4', 'C1'), ('2', 'B1')): W(S, ('D201', a), ('U202', b))
-    W(S, ('U202', 'A1'), (52, 50)); W(S, ('D201', '3'), (53, 52), (53, 50)); pw(S, 'VLED', 52, 50, 'up')
+    S.place('D201', gp(60, 52), pin='3')
+    for a, b in (('3', 'D1'), ('4', 'C1'), ('1', 'B1')): W(S, ('D201', a), ('U202', b))
+    W(S, ('U202', 'A1'), (52, 50)); W(S, ('D201', '2'), (53, 52), (53, 50)); pw(S, 'VLED', 52, 50, 'up')
     W(S, ('U202', 'D5'), (56, 56), (56, 58)); part2(S, 'D202', 56, 58, '1', 'down', text='left')
     W(S, ('U202', 'D4'), (59, 57), (59, 58)); part2(S, 'D203', 59, 58, '1', 'down')
     W(S, ('U202', 'B5'), (66, 60)); cap(S, 'C206', 66, 60)
     W(S, ('U202', 'C2'), (80, 51), (80, 50)); W(S, ('U202', 'D2'), (80, 50), (80, 44), (91, 44))
     cap(S, 'C207', 83, 44); cap(S, 'C208', 87, 44); cap(S, 'C209', 91, 44); pw(S, '+1V8', 80, 44, 'up')
-    T(S, 'LED1 xanh (nhịp tim), LED2 đỏ, LED3 IR (SpO2)', 42, 66)
-    T(S, 'PD1/PD2 đọc đồng thời', 42, 68)
+    a = gpin(S, 'D202', '5'); b = gpin(S, 'D203', '5'); y = a[1] + 1
+    W(S, ('D202', '5'), (a[0], y), (b[0], y), ('D203', '5')); W(S, (a[0], y), (46, y)); cap(S, 'R205', 46, y); lb(S, 'PD_GND', 50, y, 'up')
+    T(S, 'LED1 xanh (nhịp tim), LED2 đỏ, LED3 IR (SpO2); PD1/PD2 đọc đồng thời', 50, 69)
+    T(S, 'R205 0 Ω: PD_GND về GND tại 1 điểm (MAX p.88)', 50, 70.5)
     # level shifter, A side wired straight to the AFE
     F(S, 'Chuyển mức TXS0108E (1.8 ↔ 3.3 V)', 98, 36, 132, 72)
     S.place('U203', gp(100, 56), text='right')
     for a, b, n in (('A2', '1', 'SCLK_1V8'), ('A4', '3', 'SDI_1V8'), ('A3', '4', 'SDO_1V8'), ('A5', '5', 'CSB_1V8'), ('B2', '6', 'INT_1V8')):
         pa = gpin(S, 'U202', a); W(S, ('U202', a), ('U203', b)); lb(S, n, pa[0] + 3, pa[1])
-    T(S, 'OE: RC 100k/100n ≈ 10 ms (TXS §8.3)', 106, 70)
-    pw(S, '+1V8', 112, 62, 'up'); cap(S, 'R202', 112, 62); W(S, (112, 65), (116, 65)); cap(S, 'C210', 116, 65); W(S, (112, 65), (110, 65)); lb(S, 'TXS_OE', 110, 65, 'left')
+    T(S, 'OE nối thẳng VCCA (TXS p.6: OE Δt/Δv ≤ 10 ns/V)', 106, 70)
     pw(S, '+1V8', 122, 62, 'up'); cap(S, 'C211', 122, 62)
     pw(S, '+3V3', 127, 62, 'up'); cap(S, 'C212', 127, 62)
     # skin temperature

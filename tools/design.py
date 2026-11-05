@@ -1,12 +1,12 @@
 """Health watch (đồ án): single source of truth for both boards - parts, pin->net, values, design reasons, citations.
-gen_sch.py draws the schematics from it, gen_report.py writes the design report, gen_bom.py the BOM.
+gen_sch.py draws the schematics from it; gen_design_report.py lists its parts in the design report.
 
-Boards (design frozen with the user 2026-11-04, see docs/health_watch_design_report.md):
+Boards (design frozen with the user 2026-11-04, see outputs/health_watch_design_report.docx):
   main   : ESP32-S3R8 + 16 MB flash + ceramic antenna, AXP2101 PMIC + LiPo ~400 mAh + USB-C, AMOLED 1.75" (CO5300 QSPI,
            CST9217 touch) on a 31-pin FPC, BMI270 IMU, PCF85063A RTC, vibration motor, buzzer, SOS + power buttons,
            status LEDs, UART0 header, BOOT/RESET, current shunts + test points, TPS61240 5 V boost for the PPG LEDs,
            16-pin FPC to the sensor board.
-  sensor : MAX86141 PPG AFE + SFH 7013 (green/red/IR) + 2 x VEMD8080, LP5907 1.8 V LDO, TXS0108E 1.8 <-> 3.3 V level
+  sensor : MAX86141 PPG AFE + SFH 7016 (green/red/IR) + 2 x VEMD8080, LP5907 1.8 V LDO, TXS0108E 1.8 <-> 3.3 V level
            shifter, MAX30208 skin temperature, 16-pin FPC.
 
 Citation keys -> files in docs/datasheets/ (page = printed page number; for all these documents printed = PDF page,
@@ -25,7 +25,7 @@ DOCS = {
  'TXS':  ('LCSC_C17206_TXS0108E.pdf', 'TI TXS0108E datasheet SCES642L'),
  'LP':   ('LCSC_C92498_LP5907-1.8.pdf', 'TI LP5907 datasheet'),
  'W25':  ('LCSC_C97521_W25Q128JVSIQ.pdf', 'Winbond W25Q128JV datasheet'),
- 'SFH':  ('OSRAM_SFH7013.pdf', 'OSRAM SFH 7013 datasheet (Chinese edition) v1.3'),
+ 'SFH':  ('OSRAM_SFH7016.pdf', 'OSRAM SFH 7016 datasheet v1.5'),
  'VEMD': ('LCSC_C511402_VEMD8080.pdf', 'Vishay VEMD8080 datasheet rev 1.0'),
  'LC6':  ('LCSC_C7519_USBLC6-2SC6.pdf', 'ST USBLC6-2 datasheet'),
  'TYC':  ('LCSC_C165948_TYPE-C-31-M-12.pdf', 'USB-C receptacle TYPE-C-31-M-12 drawing'),
@@ -44,46 +44,46 @@ P = {
  'BOOST':  ('HW_Watch:TPS61240', 'TPS61240DRVT', 'Package_SON:WSON-6-1EP_2x2mm_P0.65mm_EP1x1.6mm', 'C133991', 'TPS'),
  'IMU':    ('HW_Watch:BMI270', 'BMI270', 'Package_LGA:Bosch_LGA-14_3x2.5mm_P0.5mm', 'C2836813', 'BMI'),
  'RTC':    ('Timer_RTC:PCF85063ATL', 'PCF85063ATL/1', 'Package_DFN_QFN:DFN-10-1EP_2.6x2.6mm_P0.5mm_EP1.3x2.2mm', 'C404360', ''),
- 'AFE':    ('HW_Watch:MAX86141', 'MAX86141ENP+', 'HW_Watch:MAX86141_WLP-20_2.05x1.85mm_P0.4mm', 'C5328762', 'MAX'),
+ 'AFE':    ('HW_Watch:MAX86141', 'MAX86141ENP+T', 'HW_Watch:MAX86141_WLP-20_2.05x1.85mm_P0.4mm', 'C5328762 (LCSC hết hàng 05/11/2026)', 'MAX'),
  'TEMP':   ('HW_Watch:MAX30208', 'MAX30208CLB+', 'HW_Watch:MAX30208_LGA-10_2x2mm_PRELIM', 'C2874216', 'M30'),
  'LDO18':  ('Regulator_Linear:LP5907MFX-1.8', 'LP5907MFX-1.8', 'Package_TO_SOT_SMD:SOT-23-5', 'C92498', 'LP'),
  'TXS':    ('Logic_LevelTranslator:TXS0108EPW', 'TXS0108EPWR', 'Package_SO:TSSOP-20_4.4x6.5mm_P0.65mm', 'C17206', 'TXS'),
- 'LED3':   ('HW_Watch:SFH7013', 'SFH 7013', 'HW_Watch:SFH7013_2.5x1.6mm', 'C2900450', 'SFH'),
+ 'LED3':   ('HW_Watch:SFH7016', 'SFH 7016', 'HW_Watch:SFH7016_1.85x1.65mm', 'Q65112A7849 (mã ams-OSRAM; chưa có mã LCSC xác nhận)', 'SFH'),
  'PD':     ('HW_Watch:VEMD8080', 'VEMD8080', 'HW_Watch:VEMD8080_4.8x2.5mm', 'C511402', 'VEMD'),
  'ESD':    ('HW_IC:USBLC6-2SC6', 'USBLC6-2SC6', 'Package_TO_SOT_SMD:SOT-23-6', 'C7519', 'LC6'),
  'USBC':   ('HW_IC:USB_C_Receptacle_USB2.0_16P', 'TYPE-C-31-M-12', 'HW_IC:USB_C_Receptacle_16P_MidMount_TYPE-C-31-M-12', 'C165948', 'TYC'),
  'XTAL40': ('Device:Crystal_GND24', '40MHz 10ppm CL15pF', 'Crystal:Crystal_SMD_3225-4Pin_3.2x2.5mm', 'C9010', 'XT'),
- 'XTAL32': ('Device:Crystal', '32.768kHz CL7pF', 'Crystal:Crystal_SMD_2012-2Pin_2.0x1.2mm', 'C2838510 (chọn mã CL 7 pF)', ''),
- 'ANT':    ('Device:Antenna_Chip', '2450AT18A100E', 'RF_Antenna:Johanson_2450AT18x100', 'C2917717 (kiểm tra mã)', ''),
+ 'XTAL32': ('Device:Crystal', '32.768kHz CL7pF', 'Crystal:Crystal_SMD_2012-2Pin_2.0x1.2mm', '(chọn mã CL 7 pF)', ''),
+ 'ANT':    ('Device:Antenna_Chip', '2450AT18A100E', 'RF_Antenna:Johanson_2450AT18x100', '(chọn mã)', ''),
  'NFET':   ('Transistor_FET:AO3400A', 'AO3400A', 'Package_TO_SOT_SMD:SOT-23', 'C20917', ''),
- 'DFLY':   ('Device:D_Schottky', 'BAT54WS', 'Diode_SMD:D_SOD-323', 'C191023', ''),
+ 'DFLY':   ('Device:D_Schottky', 'BAT54WS', 'Diode_SMD:D_SOD-323', '(chọn mã)', ''),
  'MOTOR':  ('Motor:Motor_DC', 'Coin motor 1027 3V', 'HW_Watch:Motor_Pads_2x1.5mm', '(Shopee: motor rung đồng xu 1027)', ''),
- 'BUZZ':   ('Device:Buzzer', 'CMT-8504-100-SMT', 'Buzzer_Beeper:MagneticBuzzer_CUI_CMT-8504-100-SMT', 'CMT-8504-100-SMT (CUI)', ''),
+ 'BUZZ':   ('Device:Buzzer', 'CMT-8504-100-SMT-TR', 'Buzzer_Beeper:MagneticBuzzer_CUI_CMT-8504-100-SMT', 'CMT-8504-100-SMT-TR (Same Sky)', ''),
  'BTN':    ('Switch:SW_Push', 'TS-1088 4x3mm', 'HW_IC:SW_SPST_TS-1088-xR020', 'C720477', 'TS'),
- 'NTC':    ('Device:Thermistor_NTC', 'NTC 10k B3950', 'Resistor_SMD:R_0402_1005Metric', 'C25563', ''),
+ 'NTC':    ('Device:Thermistor_NTC', 'NTC 10k B3950', 'Resistor_SMD:R_0402_1005Metric', '(chọn mã)', ''),
  'BAT':    ('Connector_Generic_MountingPin:Conn_01x02_MountingPin', 'LiPo 1S ~400mAh', 'Connector_Molex:Molex_PicoBlade_53261-0271_1x02-1MP_P1.25mm_Horizontal', '53261-0271', ''),
  'FPC31':  ('Connector_Generic_MountingPin:Conn_01x31_MountingPin', 'FPC 0.3mm 31P back-flip', 'HW_Watch:FPC_P0.30mm_1x31-1MP_BackFlip_Staggered', '(như bo Waveshare)', 'WS'),
- 'FPC16':  ('Connector_Generic_MountingPin:Conn_01x16_MountingPin', 'FH12-16S-0.5SH', 'Connector_FFC-FPC:Hirose_FH12-16S-0.5SH_1x16-1MP_P0.50mm_Horizontal', 'C506807 (kiểm tra mã)', ''),
+ 'FPC16':  ('Connector_Generic_MountingPin:Conn_01x16_MountingPin', 'FH12-16S-0.5SH', 'Connector_FFC-FPC:Hirose_FH12-16S-0.5SH_1x16-1MP_P0.50mm_Horizontal', '(chọn mã)', ''),
  'HDR3':   ('Connector_Generic:Conn_01x03', 'UART0 1x03 2.54', 'Connector_PinHeader_2.54mm:PinHeader_1x03_P2.54mm_Vertical', '', ''),
  'TP':     ('Connector:TestPoint', 'TP', 'TestPoint:TestPoint_Pad_D1.0mm', '', ''),
  'LED_R':  ('Device:LED', 'Red 0603', 'LED_SMD:LED_0603_1608Metric', 'C2286', ''),
  'LED_G':  ('Device:LED', 'Green 0603', 'LED_SMD:LED_0603_1608Metric', 'C72043', ''),
 }
-def R(v, lcsc='', pkg='0402'): return ('Device:R', v, 'Resistor_SMD:R_%s_%sMetric' % (pkg, {'0402': '1005', '0603': '1608', '0805': '2012'}[pkg]), lcsc, '')
-def C(v, lcsc='', pkg='0402'): return ('Device:C', v, 'Capacitor_SMD:C_%s_%sMetric' % (pkg, {'0402': '1005', '0603': '1608', '0805': '2012'}[pkg]), lcsc, '')
+def R(v, lcsc='', pkg='0402'): return ('Device:R', v, 'Resistor_SMD:R_%s_%sMetric' % (pkg, {'0201': '0603', '0402': '1005', '0603': '1608', '0805': '2012'}[pkg]), lcsc, '')
+def C(v, lcsc='', pkg='0402'): return ('Device:C', v, 'Capacitor_SMD:C_%s_%sMetric' % (pkg, {'0201': '0603', '0402': '1005', '0603': '1608', '0805': '2012'}[pkg]), lcsc, '')
 def L(v, lcsc='', fp='Inductor_SMD:L_0402_1005Metric'): return ('Device:L', v, fp, lcsc, '')
 P.update({
- 'R0': R('0R', 'C17168'), 'R5k1': R('5.1k', 'C25905'), 'R10k': R('10k', 'C25744'), 'R100k': R('100k', 'C25741'), 'R1k': R('1k', 'C11702'),
- 'R510': R('510', 'C25123'), 'R2k2': R('2.2k', 'C25879'), 'R4k7': R('4.7k', 'C25900'), 'R22': R('22', 'C25092'), 'R499': R('499', 'C25100'),
+ 'R0': R('0R', 'C17168'), 'R0_0805': R('0R 0805', 'C17477', '0805'), 'R0_RF': R('0R', '(chọn mã)', '0201'), 'R1M': R('1M', 'C26083'), 'R5k1': R('5.1k', 'C25905'), 'R10k': R('10k', 'C25744'), 'R100k': R('100k', 'C25741'), 'R1k': R('1k', 'C11702'),
+ 'R510': R('510', 'C25123'), 'R2k2': R('2.2k', 'C25879'), 'R4k7': R('4.7k', 'C25900'), 'R22': R('22', 'C25092'), 'R499': R('499', '(chọn mã)'),
  'R100': R('100', 'C25076'),
- 'RS50m': R('0.05R 1% 0805', 'C129937 (kiểm tra mã)', '0805'), 'RS100m': R('0.1R 1% 0603', 'C22381 (kiểm tra mã)', '0603'),
+ 'RS50m': R('0.05R 1% 0805', '(chọn mã)', '0805'), 'RS100m': R('0.1R 1% 0603', '(chọn mã)', '0603'),
  'C100n': C('100nF', 'C1525'), 'C1u': C('1uF', 'C52923'), 'C10n': C('10nF', 'C15195'), 'C2u2': C('2.2uF', 'C12530'),
- 'C4u7': C('4.7uF', 'C23733', '0603'), 'C10u': C('10uF 10V', 'C19702', '0603'), 'C22u': C('22uF 6.3V', 'C59461', '0603'),
- 'C22p': C('22pF C0G', 'C1555'), 'C8p': C('8.2pF C0G', 'C1546 (kiểm tra mã)'), 'C1n': C('1nF', 'C1523'),
- 'C1p5': C('1.5pF C0G', 'C1546 (chọn mã ±0.1pF)'), 'CDNP': C('DNP', ''),
- 'L2n0': L('2.0nH', 'LQG15 2.0nH (chọn mã)'), 'L2n4': L('2.4nH', 'LQG15 2.4nH (chọn mã)'), 'L24n': L('24nH', 'LQG15 24nH (chọn mã)'),
- 'L1u_2A': L('1uH 2.5A', '1uH 2520 Isat ≥2.5A (chọn mã)', 'Inductor_SMD:L_1008_2520Metric'),
- 'L1u_1A': L('1uH 1A', '1uH 0805 Isat ≥1A (chọn mã)', 'Inductor_SMD:L_0805_2012Metric'),
+ 'C4u7': C('4.7uF', 'C19666', '0603'), 'C10u': C('10uF 10V', 'C19702', '0603'), 'C22u': C('22uF 6.3V', 'C59461', '0603'),
+ 'C22p': C('22pF C0G', 'C1555'), 'C1n': C('1nF', 'C1523'),
+ 'C1p5': C('1.5pF C0G', '(chọn mã ±0.1pF)', '0201'), 'CDNP': C('DNP', '', '0201'),
+ 'L2n0': L('2.0nH', '(chọn mã)'), 'L2n4': L('2.4nH', '(chọn mã)', 'Inductor_SMD:L_0201_0603Metric'), 'L24n': L('24nH', '(chọn mã)'),
+ 'L1u_2A': L('1uH 2.5A', '(chọn mã 2520, Isat ≥2.5A)', 'Inductor_SMD:L_1008_2520Metric'),
+ 'L1u_1A': L('1uH 1A', '(chọn mã 0805, Isat ≥1A)', 'Inductor_SMD:L_0805_2012Metric'),
 })
 
 def part(ref, typ, pins, block, why, cite='', dnp=False): return dict(ref=ref, typ=typ, pins=pins, block=block, why=why, cite=cite, dnp=dnp)
@@ -92,7 +92,7 @@ def res(ref, typ, a, b, block, why, cite=''): return part(ref, typ, {'1': a, '2'
 def tp(ref, net, block, why): return part(ref, 'TP', {'1': net}, block, why)
 
 # ================================================================ MAIN BOARD
-ESP_GPIO = {   # QFN-56 pin -> net (DS Table 2-1 pin list; display/touch pins kept as on the Waveshare 1.75C board, WS p.1 GPIO table)
+ESP_GPIO = {   # QFN-56 pin -> net (DS Table 2-1 pin list). QSPI/touch follow the Waveshare board; LCD_RST = GPIO1, TP_RST = GPIO2 chosen here
  '5': 'BOOT', '6': 'LCD_RST', '7': 'TP_RST', '8': 'VLED_EN', '9': 'QSPI_D0', '10': 'QSPI_D1', '11': 'QSPI_D2', '12': 'QSPI_D3',
  '13': 'BTN_SOS', '14': 'IMU_INT1', '15': 'PPG_INT', '16': 'TP_INT', '17': 'LCD_CS', '18': 'LCD_TE', '19': 'SYS_SCL', '21': 'SYS_SDA',
  '22': 'AXP_IRQ', '23': 'RTC_INT', '24': 'LED_STAT', '27': 'IMU_INT2', '43': 'QSPI_CLK', '44': 'PPG_SCLK', '45': 'PPG_MOSI',
@@ -140,9 +140,10 @@ MAIN = [
  cap('C10', 'C1u', 'VSYS', 'PMIC', 'Tụ vào ALDOIN 1 µF.', 'AXP Fig 7-1 p.57'),
  part('L1', 'L1u_2A', {'1': 'LX1', '2': '3V3_PMIC'}, 'PMIC', 'Cuộn DCDC1 1 µH (3 MHz); Isat ≥ 2.5 A cho tải đỉnh WiFi + màn hình.', 'AXP Fig 7-1 p.57, §6.6 p.22 (3 MHz)'),
  cap('C11', 'C22u', '3V3_PMIC', 'PMIC', 'Tụ ra DCDC1 22 µF, FB1 lấy tại đây.', 'AXP Fig 7-1 p.57'),
- part('L2', 'L1u_2A', {'1': 'AXP_SW', '2': 'VSYS_D5'}, 'PMIC', 'Chân SW (DCDC5) nối như bo Waveshare đã chạy thực tế (cuộn 1 µH về VSYS); DCDC5 không dùng làm nguồn.', 'WS p.1 (LP2, RP2); AXP Fig 7-1 p.57'),
- res('R5', 'R0', 'VSYS_D5', 'VSYS', 'PMIC', '0 Ω (Waveshare dùng 0.01 Ω ở vị trí này) - giữ nguyên cấu trúc bo tham chiếu.', 'WS p.1 (RP2)'),
- part('RT1', 'NTC', {'1': 'TS', '2': 'GND'}, 'PMIC', 'NTC 10 kΩ đặt sát pin: AXP2101 ngắt sạc khi pin quá nóng/lạnh.', 'AXP Table 4-1 p.8 (pin 31 TS); WS p.1 (RP4)'),
+ part('L2', 'L1u_2A', {'1': 'AXP_SW', '2': 'VSYS_D5'}, 'PMIC', 'Chân SW nối như bo Waveshare (cuộn 1 µH, RP1 VMID-VSYS không lắp). Theo AXP Fig 6-1 đây là đường VBUS → buck → VSYS: L102 và R105 mang dòng vào từ USB; cần kiểm tra trên bàn thử.', 'WS p.1 (LP2, RP1, RP2); AXP Fig 6-1 p.17, Fig 7-1 p.57'),
+ res('R5', 'R0_0805', 'VSYS_D5', 'VSYS', 'PMIC', '0 Ω 0805 (Waveshare dùng 0.01 Ω ở vị trí này): mang toàn bộ dòng từ USB vào VSYS, giới hạn tới 2 A nên không dùng 0402.', 'WS p.1 (RP2); AXP p.12'),
+ part('R26', 'R0_0805', {'1': 'VMID', '2': 'VSYS'}, 'PMIC', 'Vị trí VMID-VSYS không lắp, như RP1 của Waveshare: dự phòng nếu OTP không bật buck ở chân SW.', 'WS p.1 (RP1); AXP Fig 6-1 p.17', dnp=True),
+ part('RT1', 'NTC', {'1': 'TS', '2': 'GND'}, 'PMIC', 'NTC 10 kΩ trên bo, đặt gần pin: AXP2101 ngắt sạc khi quá nóng/lạnh. Đầu nối pin chỉ 2 dây nên đây là nhiệt độ bo, không phải nhiệt độ cell.', 'AXP Table 4-1 p.8 (pin 31 TS); WS p.1 (RP4)'),
  res('R6', 'R4k7', '+3V3', 'AXP_IRQ', 'PMIC', 'Kéo lên IRQ (cực máng hở) 4.7 kΩ.', 'AXP Table 4-1 p.8 (pin 38)'),
  res('R7', 'R2k2', '+3V3', 'SYS_SDA', 'PMIC', 'Kéo lên I2C SDA 2.2 kΩ (bus chung: AXP2101, touch, BMI270, RTC, MAX30208).', 'AXP Table 4-1 p.9 (pin 39 "needs a 2.2kΩ pull high")'),
  res('R8', 'R2k2', '+3V3', 'SYS_SCL', 'PMIC', 'Kéo lên I2C SCL 2.2 kΩ.', 'AXP Table 4-1 p.9 (pin 40)'),
@@ -163,12 +164,12 @@ MAIN = [
  tp('TP7', 'GND', 'PMIC', 'GND cho que đo.'),
  # ---------------- 5 V boost for the PPG LEDs
  part('U3', 'BOOST', {'6': 'VSYS', '5': 'BST_L', '4': 'VLED_EN', '2': 'VLED_5V', '3': 'VLED_5V', '1': 'GND', '7': 'GND'}, 'BOOST',
-      'Boost 5 V cấp VLED cho LED PPG: LED xanh lá có VF tới 3.35 V + áp cần cho driver, pin LiPo xuống 3.4 V thì không đủ. '
-      'Datasheet MAX86141 đo ở VLED = 5.0 V. EN do ESP32 bật chỉ khi đo PPG.', 'TPS p.1, p.3 (chân), §10.2.2 p.12 (CIN 2.2 µF, COUT 4.7 µF, L 1 µH); MAX p.6 (VLED 3.1-5.5 V); SFH p.3 (VF green max 3.35 V)'),
+      'Boost 5 V cấp VLED cho LED PPG: LED xanh lá có VF tới 2.80 V ở 20 mA và khoảng 3 V ở 100 mA (đọc đồ thị) + áp cần cho driver, pin LiPo về cuối không đủ. '
+      'Datasheet MAX86141 đo ở VLED = 5.0 V. EN do ESP32 bật chỉ khi đo PPG.', 'TPS p.1, p.3 (chân), §10.2.2 p.12 (CIN 2.2 µF, COUT 4.7 µF, L 1 µH); MAX p.6 (VLED 3.1-5.5 V); SFH p.5 (VF green max 2.80 V), p.8 (đồ thị VF)'),
  part('L3', 'L1u_1A', {'1': 'VSYS', '2': 'BST_L'}, 'BOOST', 'Cuộn boost 1 µH.', 'TPS §10.2.2 p.12 (L = 1 µH)'),
  cap('C13', 'C2u2', 'VSYS', 'BOOST', 'Tụ vào boost 2.2 µF.', 'TPS §10.2.2 p.12'),
  cap('C14', 'C4u7', 'VLED_5V', 'BOOST', 'Tụ ra boost 4.7 µF.', 'TPS §10.2.2 p.12'),
- res('R13', 'R100k', 'VLED_EN', 'GND', 'BOOST', 'Kéo xuống EN: boost tắt khi ESP32 reset/ngủ. GPIO3 là chân strapping (nguồn tín hiệu JTAG) - mức thấp không ảnh hưởng khi eFuse mặc định.', 'DS §3 Table 3-1 p.32 (GPIO3 strapping)'),
+ res('R13', 'R1M', 'VLED_EN', 'GND', 'BOOST', 'Kéo xuống EN 1 MΩ (EN chỉ cần ≤ 1 µA; 100 kΩ tốn 33 µA): boost tắt khi ESP32 reset. Khi CPU ngủ mà PPG vẫn chạy, firmware giữ mức bằng RTC hold. GPIO3 là chân strapping (nguồn tín hiệu JTAG) - mức thấp không ảnh hưởng khi eFuse mặc định.', 'DS §3 Table 3-1 p.32 (GPIO3 strapping); TPS p.5 (dòng EN)'),
  res('R14', 'RS100m', 'VLED_5V', 'VLED', 'BOOST', 'Shunt 0.1 Ω đo dòng LED PPG.', 'yêu cầu đo dòng (user)'),
  tp('TP8', 'VLED_5V', 'BOOST', 'Đo dòng VLED: phía boost.'),
  tp('TP9', 'VLED', 'BOOST', 'Đo dòng VLED: phía tải.'),
@@ -196,14 +197,14 @@ MAIN = [
  cap('C26', 'C22p', 'XTAL_N', 'MCU', 'Tụ tải thạch anh thứ hai.', 'HDG §1.3.5 p.11'),
  part('U5', 'FLASH', {'1': 'SPICS0', '2': 'SPIQ', '3': 'SPIWP', '4': 'GND', '5': 'SPID', '6': 'SPICLK', '7': 'SPIHD', '8': 'VDD_SPI'}, 'MCU',
       'Flash QSPI 16 MB (S3R8 không có flash trong chip): firmware OTA 2 phân vùng, model TFLite, bộ đệm dữ liệu offline. VDD_SPI = 3.3 V vì GPIO45 = 0 lúc reset.',
-      'W25 p.1, §3 (chân SOIC-8 208 mil); DS §3.3 Table 3-4 p.34 (VDD_SPI theo GPIO45); WS p.1 (U2)'),
+      'W25 p.1, §3 (chân SOIC-8 208 mil); DS §3.2 Table 3-4 p.34 (VDD_SPI theo GPIO45); WS p.1 (U2)'),
  cap('C27', 'C100n', 'VDD_SPI', 'MCU', 'Decoupling flash 100 nF.', 'W25'),
  # RF: chip-side CLC + antenna-side pi + chip antenna
  cap('C28', 'C1p5', 'LNA_IN', 'RF', 'Phối hợp phía chip: tụ song song 1.2-1.8 pF sát LNA_IN.', 'HDG §1.3.6 Table 6 p.13'),
  part('L6', 'L2n4', {'1': 'LNA_IN', '2': 'RF1'}, 'RF', 'Phối hợp phía chip: cuộn nối tiếp 2.0-3.0 nH.', 'HDG §1.3.6 Table 6 p.13'),
  cap('C29', 'C1p5', 'RF1', 'RF', 'Phối hợp phía chip: tụ song song 1.2-1.8 pF.', 'HDG §1.3.6 p.12-13'),
  part('C30', 'CDNP', {'1': 'RF1', '2': 'GND'}, 'RF', 'Mạch π phía ăng-ten (để trống, dùng khi đo VNA).', 'HDG §1.3.6 p.12', dnp=True),
- res('R17', 'R0', 'RF1', 'RF_ANT', 'RF', 'Phần tử nối tiếp mạch π: 0 Ω mặc định.', 'HDG §1.3.6 p.12'),
+ res('R17', 'R0_RF', 'RF1', 'RF_ANT', 'RF', 'Phần tử nối tiếp mạch π: 0 Ω mặc định.', 'HDG §1.3.6 p.12'),
  part('C31', 'CDNP', {'1': 'RF_ANT', '2': 'GND'}, 'RF', 'Mạch π phía ăng-ten (để trống).', 'HDG §1.3.6 p.12', dnp=True),
  part('AE1', 'ANT', {'1': 'RF_ANT', '2': None}, 'RF', 'Ăng-ten gốm 2.4 GHz 3.2×1.6 mm (Johanson 2450AT18A100). Đặt ở góc bo, vùng cấm đồng theo datasheet ăng-ten; cần tune mạch π bằng VNA.',
       'HDG §1.3.6; datasheet Johanson (chưa tải - ASSUME)'),
@@ -217,7 +218,7 @@ MAIN = [
                       '18': 'LCD_RST', '21': '+3V3', '22': '+3V3', '23': '+3V3', '24': '+3V3', '26': '+3V3',
                       '27': 'SYS_SCL', '28': 'SYS_SDA', '29': 'TP_RST', '30': 'TP_INT'},
       'DISPLAY', 'Màn AMOLED 1.75" 466×466 (driver CO5300, QSPI) + cảm ứng CST9217 (I2C 0x5A) trên một FPC 31 chân 0.3 mm. '
-      'Thứ tự chân và GPIO giữ đúng như bo Waveshare 1.75C để dùng lại code mẫu.', 'WS p.1 (J3, bảng GPIO)'),
+      'Thứ tự chân FPC giữ đúng J3 của bo Waveshare 1.75C. LCD_RST = GPIO1, TP_RST = GPIO2: kiểm tra và đổi hằng số chân khi dùng lại code mẫu.', 'WS p.1 (J3, bảng GPIO)'),
  cap('C32', 'C10u', '+3V3', 'DISPLAY', 'Tụ bulk 10 µF cạnh FPC màn hình (dòng xung khi màn sáng).', 'ASSUME (thực hành chung)'),
  cap('C33', 'C100n', '+3V3', 'DISPLAY', 'Decoupling 100 nF cạnh FPC.', ''),
  # ---------------- sensors on the main board
@@ -230,7 +231,7 @@ MAIN = [
  cap('C35', 'C100n', '+3V3', 'SENSORS', 'Decoupling VDDIO BMI270.', 'BMI §7'),
  part('U7', 'RTC', {'10': '+3V3', '5': 'GND', '1': 'OSCI', '2': 'OSCO', '3': 'GND', '4': 'RTC_INT', '6': 'SYS_SDA', '7': 'SYS_SCL',
                     '8': None, '9': None},
-      'SENSORS', 'RTC 32.768 kHz rất ít dòng: giữ giờ và hẹn giờ đánh thức (INT) khi ESP32 ngủ sâu. CLKOE = GND tắt CLKOUT. I2C 0x51.',
+      'SENSORS', 'RTC 32.768 kHz rất ít dòng: giữ giờ và hẹn giờ đánh thức (INT) khi ESP32 ngủ. Cấp từ +3V3 nên mất giờ khi PMIC tắt: firmware đồng bộ SNTP và kiểm cờ OS. CLKOE = GND tắt CLKOUT. I2C 0x51.',
       'ASSUME: datasheet NXP PCF85063A chưa tải được; pinout lấy từ symbol KiCad Timer_RTC:PCF85063ATL'),
  part('Y2', 'XTAL32', {'1': 'OSCI', '2': 'OSCO'}, 'SENSORS', 'Thạch anh 32.768 kHz CL 7 pF (PCF85063A có tụ tải trong, chọn 7 pF bằng thanh ghi).', 'ASSUME (datasheet PCF85063A)'),
  cap('C36', 'C100n', '+3V3', 'SENSORS', 'Decoupling PCF85063A.', ''),
@@ -239,23 +240,29 @@ MAIN = [
  part('Q1', 'NFET', {'1': 'MOT_G', '2': 'GND', '3': 'MOT_D'}, 'UI', 'MOSFET kênh N mức logic (VGS(th) thấp) đóng ngắt motor rung, PWM từ GPIO46.', 'AO3400A datasheet (ASSUME, chưa tải)'),
  res('R20', 'R100', 'MOTOR', 'MOT_G', 'UI', 'Điện trở cổng 100 Ω.', ''),
  res('R21', 'R100k', 'MOT_G', 'GND', 'UI', 'Kéo xuống cổng: motor tắt khi reset. GPIO46 là chân strapping, phải ở mức 0 lúc khởi động (SPI boot).', 'DS §3 Table 3-1 p.32, Table 3-3 p.33 (GPIO46)'),
- part('M1', 'MOTOR', {'1': 'VSYS', '2': 'MOT_D'}, 'UI', 'Motor rung đồng xu 1027 (3 V): báo té ngã / nhịp bất thường / thông báo. Cấp từ VSYS, firmware giới hạn duty ≤ 75 % khi VSYS 4.2 V.', ''),
+ part('M1', 'MOTOR', {'1': 'VSYS', '2': 'MOT_D'}, 'UI', 'Motor rung đồng xu 1027 (3 V): báo té ngã / nhịp bất thường / thông báo. Cấp từ VSYS, firmware giới hạn duty ≈ 3 V / VSYS (71 % khi VSYS 4.2 V).', ''),
  part('D2', 'DFLY', {'1': 'VSYS', '2': 'MOT_D'}, 'UI', 'Diode dập xung ngược của motor.', ''),
- part('Q2', 'NFET', {'1': 'BZ_G', '2': 'GND', '3': 'BZ_D'}, 'UI', 'MOSFET kênh N đóng ngắt còi, PWM ~2.7 kHz (tần số cộng hưởng) từ GPIO45.', ''),
+ part('Q2', 'NFET', {'1': 'BZ_G', '2': 'GND', '3': 'BZ_D'}, 'UI', 'MOSFET kênh N đóng ngắt còi, PWM 4 kHz (định mức của CMT-8504) từ GPIO45.', ''),
  res('R22', 'R100', 'BUZZER', 'BZ_G', 'UI', 'Điện trở cổng 100 Ω.', ''),
  res('R23', 'R100k', 'BZ_G', 'GND', 'UI', 'Kéo xuống cổng. GPIO45 là chân strapping VDD_SPI: phải 0 lúc reset để flash chạy 3.3 V.', 'DS §3 Table 3-1 p.32, Table 3-4 p.34 (GPIO45)'),
- part('BZ1', 'BUZZ', {'1': 'VSYS', '2': 'BZ_D'}, 'UI', 'Còi từ 8.5 mm SMD: báo động té ngã để người xung quanh nghe.', 'CUI CMT-8504 (ASSUME, chưa tải)'),
+ part('BZ1', 'BUZZ', {'1': 'VSYS', '2': 'BZ_D'}, 'UI', 'Còi từ 8.5 mm SMD: báo động tại chỗ. Định mức 5 V, 150 mA, 4 kHz; cấp từ VSYS nên âm lượng thấp hơn định mức, cần đo.', 'DigiKey CMT-8504-100-SMT-TR (datasheet chưa tải được)'),
  part('D3', 'DFLY', {'1': 'VSYS', '2': 'BZ_D'}, 'UI', 'Diode dập xung ngược của còi từ (cuộn dây).', ''),
  part('SW4', 'BTN', {'1': 'BTN_SOS', '2': 'GND'}, 'UI', 'Nút SOS: gửi cảnh báo khẩn ngay; nối GPIO8 (RTC GPIO) để đánh thức từ deep sleep.', 'DS §2.3 p.23-24 (RTC GPIO)'),
  res('R24', 'R10k', '+3V3', 'BTN_SOS', 'UI', 'Kéo lên nút SOS (không phụ thuộc pull-up nội khi ngủ).', ''),
  cap('C37', 'C100n', 'BTN_SOS', 'UI', 'Chống dội nút SOS (RC 1 ms).', ''),
- res('R25', 'R1k', 'LED_STAT', 'LED_STAT_A', 'UI', 'Hạn dòng LED trạng thái ≈ (3.3−2.9)/1k... chọn 1 kΩ (~0.5-1 mA đủ sáng).', ''),
+ res('R25', 'R1k', 'LED_STAT', 'LED_STAT_A', 'UI', 'Hạn dòng LED trạng thái 1 kΩ: dòng < 1 mA, phụ thuộc VF của LED (kiểm tra độ sáng trên bo thật).', ''),
  part('D4', 'LED_G', {'2': 'LED_STAT_A', '1': 'GND'}, 'UI', 'LED xanh trạng thái (đã kết nối / lỗi / đang đo) - nhìn được khi màn hình tắt.', 'yêu cầu user'),
+ # bring-up test points on buses
+ tp('TP10', 'SYS_SDA', 'FPC', 'Đo I2C SDA khi bring-up.'),
+ tp('TP11', 'SYS_SCL', 'FPC', 'Đo I2C SCL khi bring-up.'),
+ tp('TP12', 'PPG_SCLK', 'FPC', 'Đo SPI SCLK phía 3.3 V (kiểm tra TXS0108E ở 4 MHz).'),
+ tp('TP13', 'PPG_MISO', 'FPC', 'Đo SPI MISO phía 3.3 V (kiểm tra VOH của TXS0108E).'),
+ tp('TP14', 'PPG_INT', 'FPC', 'Đo PPG_INT.'),
  # ---------------- FPC to the sensor board
  part('J5', 'FPC16', {'1': 'GND', '2': '+3V3', '3': '+3V3', '4': 'GND', '5': 'VLED', '6': 'VLED', '7': 'GND', '8': 'PPG_SCLK', '9': 'PPG_MOSI',
                       '10': 'PPG_MISO', '11': 'PPG_CS', '12': 'PPG_INT', '13': 'GND', '14': 'SYS_SDA', '15': 'SYS_SCL', '16': 'GND', 'MP': 'GND'},
       'FPC', 'FPC 16 chân 0.5 mm sang bo cảm biến: 3V3, VLED 5 V, SPI 3.3 V (đã chuyển mức trên bo cảm biến), INT, I2C. GND xen giữa nhóm nguồn LED / SPI / I2C. '
-      'Cáp FFC loại B (hai đầu tiếp điểm ngược mặt) để chân 1 ↔ chân 1.', 'Hirose FH12 (footprint KiCad)'),
+      'Sơ đồ chân không đối xứng: cáp đảo sẽ đưa 5 V vào chân tín hiệu. Chốt loại FFC bằng mô hình cơ khí, đo thông mạch trước khi cấp nguồn.', 'Hirose FH12 (footprint KiCad)'),
 ]
 
 # ================================================================ SENSOR BOARD
@@ -271,13 +278,13 @@ SENSOR = [
       'LDO 1.8 V nhiễu thấp (6.5 µVrms) riêng cho AFE: MAX86141 chỉ chịu 1.7-2.0 V, PSRR tốt chặn nhiễu DC-DC. EN = IN (luôn bật; AFE tự shutdown 0.6 µA).',
       'LP p.1 (noise, PSRR); MAX p.6 (VDD 1.7-2.0 V), p.7 (shutdown 0.6 µA)'),
  cap('C4', 'C1u', '+3V3', 'LDO', 'Tụ vào LDO 1 µF.', 'LP p.6 (điều kiện đo CIN = COUT = 1 µF)'),
- cap('C5', 'C1u', '1V8_LDO', 'LDO', 'Tụ ra LDO 1 µF.', 'LP p.6 (COUT 1 µF)'),
+ part('C5', 'C1u', {'1': '1V8_LDO', '2': 'GND'}, 'LDO', 'Vị trí tụ ra LDO, không lắp: tụ trên +1V8 (C207, C208, C209, C211 = 10.3 µF danh định) đã đủ; LP5907 cho COUT tối đa 10 µF hiệu dụng, ESR 5-500 mΩ (R201 0.1 Ω nằm trong dải).', 'LP p.7 (COUT, ESR)', dnp=True),
  res('R1', 'RS100m', '1V8_LDO', '+1V8', 'LDO', 'Shunt 0.1 Ω đo dòng 1V8 của AFE + phía A của TXS0108E.', 'yêu cầu đo dòng (user)'),
  tp('TP1', '1V8_LDO', 'LDO', 'Đo dòng 1V8: phía LDO.'),
  tp('TP2', '+1V8', 'LDO', 'Đo dòng 1V8: phía tải.'),
  tp('TP3', 'GND', 'LDO', 'GND cho que đo.'),
  # PPG AFE
- part('U2', 'AFE', {'A1': 'VLED', 'D1': 'LED_G_K', 'C1': 'LED_R_K', 'B1': 'LED_IR_K', 'D5': 'PD1_K', 'D4': 'PD2_K', 'C5': 'GND', 'B5': 'AFE_VREF',
+ part('U2', 'AFE', {'A1': 'VLED', 'D1': 'LED_G_K', 'C1': 'LED_R_K', 'B1': 'LED_IR_K', 'D5': 'PD1_K', 'D4': 'PD2_K', 'C5': 'PD_GND', 'B5': 'AFE_VREF',
                     'D2': '+1V8', 'C2': '+1V8', 'A2': 'SCLK_1V8', 'A4': 'SDI_1V8', 'A3': 'SDO_1V8', 'A5': 'CSB_1V8', 'B2': 'INT_1V8',
                     'B3': None, 'B4': None, 'C4': 'GND', 'C3': 'GND', 'D3': 'GND'},
       'AFE', 'AFE quang PPG: 3 bộ lái LED (tới 124 mA), 2 kênh ADC dòng 19-bit cho 2 photodiode chạy đồng thời, khử ánh sáng môi trường, FIFO 128 mẫu. '
@@ -287,29 +294,28 @@ SENSOR = [
  cap('C7', 'C100n', '+1V8', 'AFE', 'VDD_ANA: 0.1 µF sát bump.', 'MAX p.12 (VDD_ANA)'),
  cap('C8', 'C10u', '+1V8', 'AFE', 'VDD_ANA: 10 µF.', 'MAX p.12 (VDD_ANA)'),
  cap('C9', 'C100n', '+1V8', 'AFE', 'VDD_DIG: bypass 0.1 µF.', 'MAX p.12 (VDD_DIG); sơ đồ khối MAX p.40'),
- part('D1', 'LED3', {'3': 'VLED', '1': 'LED_G_K', '4': 'LED_R_K', '2': 'LED_IR_K'}, 'AFE',
+ part('D1', 'LED3', {'2': 'VLED', '5': 'VLED', '3': 'LED_G_K', '4': 'LED_R_K', '1': 'LED_IR_K', '6': None}, 'AFE',
       'LED 3 màu trong 1 vỏ: xanh lá 530 nm (nhịp tim ở cổ tay), đỏ 655 nm + hồng ngoại 940 nm (SpO2). Anode chung lên VLED, cathode về LEDx_DRV.',
-      'SFH p.1, p.3 (VF), p.9 (chân); MAX p.12 (nối LED)'),
- part('D2', 'PD', {'1': 'PD1_K', '2': 'PD1_K', '3': 'PD1_K', '4': 'PD1_K', '6': 'PD1_K', '7': 'PD1_K', '8': 'PD1_K', '5': 'GND'}, 'AFE',
+      'SFH p.3-5 (bước sóng, VF), p.11-12 (xung), p.13-14 (chân, pad); MAX p.12 (nối LED)'),
+ part('D2', 'PD', {'1': 'PD1_K', '2': 'PD1_K', '3': 'PD1_K', '4': 'PD1_K', '6': 'PD1_K', '7': 'PD1_K', '8': 'PD1_K', '5': 'PD_GND'}, 'AFE',
       'Photodiode diện tích lớn #1 (phía trái LED). Cathode → PD1_IN, anode → PD_GND.', 'VEMD p.1, p.4 (chân); MAX p.12 (PD1_IN)'),
- part('D3', 'PD', {'1': 'PD2_K', '2': 'PD2_K', '3': 'PD2_K', '4': 'PD2_K', '6': 'PD2_K', '7': 'PD2_K', '8': 'PD2_K', '5': 'GND'}, 'AFE',
+ part('D3', 'PD', {'1': 'PD2_K', '2': 'PD2_K', '3': 'PD2_K', '4': 'PD2_K', '6': 'PD2_K', '7': 'PD2_K', '8': 'PD2_K', '5': 'PD_GND'}, 'AFE',
       'Photodiode #2 (phía phải LED): 2 kênh giúp chọn kênh tốt / trung bình khi cử động.', 'VEMD p.4; MAX p.12 (PD2_IN, chỉ MAX86141)'),
+ res('R5', 'R0', 'PD_GND', 'GND', 'AFE', 'Nối PD_GND (anode photodiode, bump C5) về GND tại một điểm, tách dòng xung LED ở PGND khỏi đường hồi photodiode.', 'MAX p.12 (PD_GND), p.88 (shorting via / 0 Ω, Note 3)'),
  # level shifter 1.8 <-> 3.3 V
- part('U3', 'TXS', {'2': '+1V8', '19': '+3V3', '11': 'GND', '10': 'TXS_OE',
+ part('U3', 'TXS', {'2': '+1V8', '19': '+3V3', '11': 'GND', '10': '+1V8',
                     '1': 'SCLK_1V8', '3': 'SDI_1V8', '4': 'SDO_1V8', '5': 'CSB_1V8', '6': 'INT_1V8', '7': None, '8': None, '9': None,
                     '20': 'PPG_SCLK', '18': 'PPG_MOSI', '17': 'PPG_MISO', '16': 'PPG_CS', '15': 'PPG_INT', '14': None, '13': None, '12': None},
-      'SHIFT', 'Chuyển mức 2 chiều tự động 1.8 V ↔ 3.3 V cho SPI + INT: chân MAX86141 tối đa 2.2 V, còn ESP32 cần VIH ≥ 0.75·3.3 V. '
+      'SHIFT', 'Chuyển mức 2 chiều tự động 1.8 V ↔ 3.3 V cho SPI + INT: logic MAX86141 chạy ở 1.8 V (VOH SDO không đủ), còn ESP32 cần VIH ≥ 0.75·3.3 V. OE nối thẳng VCCA vì FPC 16 chân không còn chân để đưa tín hiệu OE sang bo cảm biến (GPIO47/48 của ESP32 còn trống). '
       'VCCA = 1.8 V ≤ VCCB = 3.3 V luôn đúng vì 1V8 lấy từ 3V3. Kênh 6-8 để trống (có điện trở kéo lên nội).',
-      'TXS p.1, p.4 (chân), §7.3.5 p.18 (pull-up 4k/40k nội), §8.3 p.20 (OE, VCCA ≤ VCCB); MAX p.4 (abs max 2.2 V), DS Table 5-4 p.65 (VIH = 0.75·VDD)'),
- res('R2', 'R100k', '+1V8', 'TXS_OE', 'SHIFT', 'OE nối VCCA qua RC 100 kΩ/100 nF (~10 ms): chỉ bật sau khi VCCA, VCCB ổn định.', 'TXS §8.3 p.20'),
- cap('C10', 'C100n', 'TXS_OE', 'SHIFT', 'Tụ RC trễ OE.', 'TXS §8.3 p.20'),
+      'TXS p.1, p.4 (chân), p.6 (OE: VIH, Δt/Δv ≤ 10 ns/V), §7.3.5 p.18 (pull-up 4k/40k nội), §8.3 p.20 (VCCA ≤ VCCB); MAX p.8 (mức logic), DS Table 5-4 p.65 (VIH = 0.75·VDD)'),
  cap('C11', 'C100n', '+1V8', 'SHIFT', 'Decoupling VCCA.', 'TXS §8.4'),
  cap('C12', 'C100n', '+3V3', 'SHIFT', 'Decoupling VCCB.', 'TXS §8.4'),
  # skin temperature
  part('U4', 'TEMP', {'1': '+3V3', '2': '+3V3', '3': '+3V3', '4': 'GND', '5': 'GND', '6': 'GND', '8': 'SYS_SDA', '9': 'SYS_SCL',
                      '7': 'TMP_A1', '10': 'TMP_A0'},
-      'TEMP', 'Cảm biến nhiệt độ da ±0.1 °C (I2C). GPIO1 = 1, GPIO0 = 0 → địa chỉ 0x52 (tránh 0x51 của RTC); đọc theo chu kỳ, không dùng INT. '
-      'Đặt sát tấm tiếp xúc da, cách xa LDO/LED (nguồn nhiệt).', 'M30 p.1, p.6 (chân), Table 3 p.10 (địa chỉ)'),
+      'TEMP', 'Cảm biến nhiệt độ (I2C): sai số chip ±0.1 °C trong +30…+50 °C; nhiệt độ da còn phụ thuộc đường dẫn nhiệt cơ khí. Hàn reflow tối đa +220 °C. GPIO1 = 1, GPIO0 = 0 → địa chỉ 0x52 (tránh 0x51 của RTC); đọc theo chu kỳ, không dùng INT. '
+      'Đặt sát tấm tiếp xúc da, cách xa LDO/LED (nguồn nhiệt).', 'M30 p.1, p.2 (reflow, sai số), p.6 (chân), p.7 (lắp đặt), Table 3 p.10 (địa chỉ)'),
  cap('C13', 'C100n', '+3V3', 'TEMP', 'Decoupling 0.1 µF.', 'M30 p.6 (VDD)'),
  res('R3', 'R10k', '+3V3', 'TMP_A1', 'TEMP', 'GPIO1 = 1 (bit địa chỉ A1) qua 10 kΩ (an toàn nếu firmware lỡ đặt chân là output).', 'M30 Table 2-3 p.10'),
  res('R4', 'R10k', 'TMP_A0', 'GND', 'TEMP', 'GPIO0 = 0 (bit địa chỉ A0) qua 10 kΩ.', 'M30 Table 2-3 p.10'),
@@ -355,4 +361,6 @@ def check():
     fs = {k: v for k, v in SENSOR[0]['pins'].items()}
     assert fm == fs, 'FPC pin maps differ'
     return ok
-if __name__ == '__main__': check()
+if __name__ == '__main__':
+    import sys
+    sys.exit(0 if check() else 1)

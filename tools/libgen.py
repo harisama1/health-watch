@@ -1,15 +1,13 @@
 """Project library for the health watch: hardware/HW_Watch.kicad_sym + hardware/HW_Watch.pretty.
 
-Symbols are generated from pin tables typed in from the datasheets (citations next to each table); ESP32-S3R8 and AXP2101
-are copied from the existing, already checked symbols (HW_IC:ESP32-S3FN8 = same QFN-56 pinout, DS Table 2-1;
-AMOLED175C:AXP2101 checked against AXP Table 4-1 p.7-8).  Footprints that KiCad does not ship are drawn from the
-package drawings: MAX86141 WLP-20 (MAX p.11 pin map, p.1 "5 x 4, 0.4mm ball pitch"), SFH 7013 (SFH p.9-10),
+Symbols are generated from pin tables typed in from the datasheets (citations next to each table); ESP32-S3R8 (QFN-56 pinout, DS Table 2-1)
+and AXP2101 (AXP Table 4-1 p.7-8) are kept from the committed HW_Watch.kicad_sym.  Footprints that KiCad does not ship are drawn from the
+package drawings: MAX86141 WLP-20 (MAX p.11 pin map, p.1 "5 x 4, 0.4mm ball pitch"), SFH 7016 (SFH p.13-14),
 VEMD8080 (VEMD p.4).  MAX30208 LGA-10 is PRELIMINARY (land pattern 90-100101 not available offline).
 usage: python3 tools/libgen.py"""
 import os, re, uuid
 HERE = os.path.dirname(os.path.abspath(__file__))
 HW = os.path.join(HERE, '..', 'hardware')
-PCBL = os.path.expanduser('~/workspace/PCB_design_learning')
 NS = uuid.UUID('6a1f2c3e-0b5d-4c1e-9a7f-a1e0000a7c01')
 def U(*k): return str(uuid.uuid5(NS, '/'.join(map(str, k))))
 G = 2.54
@@ -68,9 +66,9 @@ def extract(path, name, newname=None, value=None, fp=None):
 
 PW, PI, IO, IN, OUT, PS, OC, NC = 'power_in', 'power_out', 'bidirectional', 'input', 'output', 'passive', 'open_collector', 'no_connect'
 SYMS = [
- extract(os.path.join(PCBL, 'kicad_lib/HW_IC.kicad_sym'), 'ESP32-S3FN8', 'ESP32-S3R8', 'ESP32-S3R8',
+ extract(os.path.join(HW, 'HW_Watch.kicad_sym'), 'ESP32-S3R8', 'ESP32-S3R8', 'ESP32-S3R8',
          'Package_DFN_QFN:QFN-56-1EP_7x7mm_P0.4mm_EP4x4mm_ThermalVias'),
- extract(os.path.join(PCBL, 'projects/esp32s3_amoled_175c/hardware/AMOLED175C.kicad_sym'), 'AXP2101', 'AXP2101', 'AXP2101',
+ extract(os.path.join(HW, 'HW_Watch.kicad_sym'), 'AXP2101', 'AXP2101', 'AXP2101',
          'Package_DFN_QFN:QFN-40-1EP_5x5mm_P0.4mm_EP3.6x3.6mm_ThermalVias'),
  # MAX86141 pin description MAX p.12, bump map p.11 (MAX86141: D4 = PD2_IN)
  symbol('MAX86141', 'U', 'MAX86141ENP+', 'HW_Watch:MAX86141_WLP-20_2.05x1.85mm_P0.4mm',
@@ -100,17 +98,17 @@ SYMS = [
  symbol('VEMD8080', 'D', 'VEMD8080', 'HW_Watch:VEMD8080_4.8x2.5mm',
         'Silicon PIN photodiode 4.8 x 2.5 mm, large area, for PPG (VEMD8080 datasheet)',
         left=[('1|2|3|4|6|7|8', 'K', PS)], right=[('5', 'A', PS)], width=7.62, kw='photodiode PPG'),
- # SFH 7013 SFH p.9: 1 cathode green, 2 cathode IR, 3 common anode, 4 cathode red
- symbol('SFH7013', 'D', 'SFH 7013', 'HW_Watch:SFH7013_2.5x1.6mm',
-        'Multi-chip LED green 530 nm / red 655 nm / IR 940 nm, common anode (OSRAM SFH 7013 datasheet)',
-        left=[('3', 'A', PS)], right=[('1', 'K_GREEN', PS), ('4', 'K_RED', PS), ('2', 'K_IR', PS)], width=12.7, kw='LED PPG'),
+ # SFH 7016 SFH p.13: 1 cathode IR, 2 + 5 common anode, 3 cathode green, 4 cathode red, 6 NC
+ symbol('SFH7016', 'D', 'SFH 7016', 'HW_Watch:SFH7016_1.85x1.65mm',
+        'Multi-chip LED green 530 nm / red 655 nm / IR 940 nm, common anode (OSRAM SFH 7016 datasheet v1.5)',
+        left=[('2|5', 'A', PS)], right=[('3', 'K_GREEN', PS), ('4', 'K_RED', PS), ('1', 'K_IR', PS), ('6', 'NC', NC)], width=12.7, kw='LED PPG'),
 ]
 lib = '(kicad_symbol_lib\n\t(version 20241209)\n\t(generator "libgen.py")\n\t(generator_version "9.0")\n' + '\n'.join(SYMS) + '\n)\n'
 open(os.path.join(HW, 'HW_Watch.kicad_sym'), 'w', encoding='utf-8').write(lib)
 
 # ---------------------------------------------------------------- footprints
 os.makedirs(os.path.join(HW, 'HW_Watch.pretty'), exist_ok=True)
-def fp(name, descr, pads, body, extra='', courtyard=0.25, attr='smd', model=None):
+def fp(name, descr, pads, body, extra='', courtyard=0.25, attr='smd', model=None, paste_margin=None):
     """pads: [(num, shape, x, y, w, h)]; body: (w, h) of the package outline"""
     bw, bh = body
     xs = [p[2] - p[4] / 2 for p in pads] + [p[2] + p[4] / 2 for p in pads] + [-bw / 2, bw / 2]
@@ -124,7 +122,7 @@ def fp(name, descr, pads, body, extra='', courtyard=0.25, attr='smd', model=None
          '\t(fp_rect (start %s %s) (end %s %s) (stroke (width 0.05) (type solid)) (fill no) (layer "F.CrtYd") (uuid "%s"))' % (r(cx0), r(cy0), r(cx1), r(cy1), U(name, 'crt')),
          '\t(fp_text user "${REFERENCE}" (at 0 0 0) (layer "F.Fab") (uuid "%s") (effects (font (size 0.4 0.4) (thickness 0.06))))' % U(name, 'fabref')]
     for i, (num, shape, x, y, w, h) in enumerate(pads):
-        extra_pad = ' (roundrect_rratio 0.25)' if shape == 'roundrect' else ''
+        extra_pad = (' (roundrect_rratio 0.25)' if shape == 'roundrect' else '') + (' (solder_paste_margin %s)' % paste_margin if paste_margin is not None else '')
         L.append('\t(pad "%s" smd %s (at %s %s) (size %s %s) (layers "F.Cu" "F.Mask" "F.Paste")%s (uuid "%s"))'
                  % (num, shape, r(x), r(y), r(w), r(h), extra_pad, U(name, 'pad', i)))
     L.append(extra)
@@ -151,11 +149,12 @@ xs = [-2.0, -0.69, 0.69, 2.0]
 fp(n, 'Vishay VEMD8080 PIN photodiode 4.8x2.5 mm (datasheet p.4 footprint)',
    [(str(i + 1), 'rect', x, 1.19, 0.54, 0.55) for i, x in enumerate(xs)] + [(str(8 - i), 'rect', x, -1.19, 0.54, 0.55) for i, x in enumerate(xs)],
    (4.8, 2.5), silk_dot(n, -2.6, 1.6))
-# SFH 7013: recommended footprint SFH p.10: pads 0.45 x 1.0, inner gaps 0.6 (x) / 0.9 (y); top view SFH p.9: 4 TL, 3 TR, 2 BL, 1 BR
-n = 'SFH7013_2.5x1.6mm'
-fp(n, 'OSRAM SFH 7013 multi-chip LED 2.5x1.6 mm (datasheet p.9 pinning, p.10 recommended footprint)',
-   [('1', 'rect', 0.525, 0.95, 0.45, 1.0), ('2', 'rect', -0.525, 0.95, 0.45, 1.0), ('3', 'rect', 0.525, -0.95, 0.45, 1.0), ('4', 'rect', -0.525, -0.95, 0.45, 1.0)],
-   (1.6, 2.5), silk_dot(n, -1.05, -1.6))
+# SFH 7016: recommended footprint SFH p.14: 6 pads 0.4 x 0.4, gaps 0.25 (x) / 0.75 (y), stencil 0.3 x 0.3; top view SFH p.13: 5 3 1 / 6 4 2
+n = 'SFH7016_1.85x1.65mm'
+fp(n, 'OSRAM SFH 7016 multi-chip LED 1.85x1.65 mm (datasheet p.13 pinning, p.14 recommended footprint; stencil 120 um)',
+   [('5', 'rect', -0.65, -0.575, 0.4, 0.4), ('3', 'rect', 0, -0.575, 0.4, 0.4), ('1', 'rect', 0.65, -0.575, 0.4, 0.4),
+    ('6', 'rect', -0.65, 0.575, 0.4, 0.4), ('4', 'rect', 0, 0.575, 0.4, 0.4), ('2', 'rect', 0.65, 0.575, 0.4, 0.4)],
+   (1.85, 1.65), silk_dot(n, 1.2, -1.0), paste_margin=-0.05)
 # coin vibration motor (10 mm, flying leads soldered to two pads): ASSUME generic
 n = 'Motor_Pads_2x1.5mm'
 fp(n, 'Two solder pads for a coin vibration motor with wire leads (1027 type)', [('1', 'rect', -1.25, 0, 1.5, 1.5), ('2', 'rect', 1.25, 0, 1.5, 1.5)], (4.0, 1.5))
