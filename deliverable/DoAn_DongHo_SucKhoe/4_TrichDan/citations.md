@@ -24,6 +24,9 @@ Số trang = trang PDF (trùng số in trên trang; riêng HDG: số in = PDF �
 | XT | 40 MHz crystal X322540MPB4SI | `datasheets/LCSC_C9010_X322540MPB4SI_40MHz.pdf` |
 | TS | tact switch TS-1088 | `datasheets/LCSC_C720477_TS-1088_tact_switch.pdf` |
 | AO | AO3401A (P-FET, reference only) | `datasheets/LCSC_C15127_AO3401A.pdf` |
+| RTC | NXP PCF85063A datasheet Rev. 7.3 | `datasheets/PCF85063A.pdf` |
+| ANT | Johanson 2450AT18D0100 datasheet Ver. 4.4 | `datasheets/Johanson_2450AT18D0100.pdf` |
+| FPC | HDGC 0.3K-HX-nPWB FPC connector drawing | `datasheets/HDGC_0.3K-HX-nPWB.pdf` |
 | WS | Waveshare ESP32-S3-Touch-AMOLED-1.75C schematic (reference design) | `datasheets/Waveshare_ESP32-S3-Touch-AMOLED-1.75C_schematic.pdf` |
 
 ## 2. Số liệu đã đối chiếu tự động (29/29 khớp trang PDF)
@@ -141,17 +144,17 @@ Số trang = trang PDF (trùng số in trên trang; riêng HDG: số in = PDF �
 | C130 | DNP | HDG §1.3.6 p.12 |
 | R117 | 0R | HDG §1.3.6 p.12 |
 | C131 | DNP | HDG §1.3.6 p.12 |
-| AE101 | 2450AT18A100E | HDG §1.3.6; datasheet Johanson (chưa tải - ASSUME) |
+| AE101 | 2450AT18D0100E | HDG §1.3.6; ANT p.1-2 |
 | R118 | 499 | HDG §1.3.7 p.13 |
 | J103 | UART0 1x03 2.54 | yêu cầu user |
-| J104 | FPC 0.3mm 31P back-flip | WS p.1 (J3, bảng GPIO) |
+| J104 | 0.3K-HX-31PWB | WS p.1 (J3, bảng GPIO); FPC p.1-2 |
 | C132 | 10uF 10V | ASSUME (thực hành chung) |
 | C133 | 100nF | - |
 | U106 | BMI270 | BMI Table 22 p.135 (chân, cách nối I2C), §5 p.128 (địa chỉ 0x68) |
 | C134 | 100nF | BMI §7 (sơ đồ nối) - ASSUME giá trị 100 nF |
 | C135 | 100nF | BMI §7 |
-| U107 | PCF85063ATL/1 | ASSUME: datasheet NXP PCF85063A chưa tải được; pinout lấy từ symbol KiCad Timer_RTC:PCF85063ATL |
-| Y102 | 32.768kHz CL7pF | ASSUME (datasheet PCF85063A) |
+| U107 | PCF85063ATT/AJ | RTC Table 3 (chân), §7.2.2.4 (COF) |
+| Y102 | 32.768kHz CL7pF | RTC p.1 (CL = 7 pF hoặc 12.5 pF) |
 | C136 | 100nF | - |
 | R119 | 10k | - |
 | Q101 | AO3400A | AO3400A datasheet (ASSUME, chưa tải) |

@@ -7,8 +7,9 @@ CONTENT = r'''
 | 1.0 | 05/11/2026 | HaiLV25 | Tạo tài liệu |
 | 1.1 | 05/11/2026 | HaiLV25 | Sửa lý do của S2; nâng mục L102/VMID (O8); trỏ sang báo cáo thiết kế tổng |
 | 1.2 | 05/11/2026 | HaiLV25 | Thêm S7-S12 (SFH 7016, R126, R105, R113, RF 0201, test point, BOM); cập nhật số liệu và bản vẽ |
+| 1.3 | 05/11/2026 | HaiLV25 | Đổi U107 sang PCF85063ATT, AE101 sang 2450AT18D (chân 2-4 nối GND), J104 sang HDGC 0.3K-HX-31PWB, D104 sang KT-0603G; điền mã JLCPCB/LCSC |
 
-Đối tượng phân tích: schematic Rev 1.2 của bo chính (`hardware/main/`) và bo cảm biến (`hardware/sensor/`). Thiết kế **chưa được chế tạo**: mọi kết luận dựa trên datasheet và công cụ kiểm tra tự động, không có số đo phần cứng.
+Đối tượng phân tích: schematic Rev 1.3 của bo chính (`hardware/main/`) và bo cảm biến (`hardware/sensor/`). Thiết kế **chưa được chế tạo**: mọi kết luận dựa trên datasheet và công cụ kiểm tra tự động, không có số đo phần cứng.
 
 ## 1. Kết luận
 
@@ -35,7 +36,7 @@ CONTENT = r'''
 
 ## 3. Kiến trúc được phân tích
 
-Đồng hồ gồm bo chính (ESP32-S3R8, AXP2101, màn AMOLED 1,75", BMI270, PCF85063A, boost 5 V, motor, còi) và bo cảm biến (MAX86141, SFH 7013, 2 × VEMD8080, LP5907 1,8 V, TXS0108E, MAX30208), nối qua FPC 16 chân. Bản vẽ đầy đủ của từng sheet ở Phụ lục B.
+Đồng hồ gồm bo chính (ESP32-S3R8, AXP2101, màn AMOLED 1,75", BMI270, PCF85063A, boost 5 V, motor, còi) và bo cảm biến (MAX86141, SFH 7016, 2 × VEMD8080, LP5907 1,8 V, TXS0108E, MAX30208), nối qua FPC 16 chân. Bản vẽ đầy đủ của từng sheet ở Phụ lục B.
 
 {{fig|block_diagram|Sơ đồ khối hai bo.|16.5}}
 
@@ -197,7 +198,7 @@ done
 
 {{landscape}}
 
-## Phụ lục B: bản vẽ schematic Rev 1.2
+## Phụ lục B: bản vẽ schematic Rev 1.3
 
 {{fig|main_power|Bo chính: USB-C, AXP2101, pin, shunt đo dòng.|21}}
 

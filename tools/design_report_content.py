@@ -33,16 +33,17 @@ CONTENT = r'''
 | 1.0 | 04/11/2026 | HaiLV25 | Tạo tài liệu |
 | 2.0 | 05/11/2026 | HaiLV25 | Viết lại sau khi rà soát toàn bộ thiết kế theo 5 mảng |
 | 2.1 | 05/11/2026 | HaiLV25 | Sửa BOM, đổi SFH 7016, sửa mạch; đổi kế hoạch cảnh báo và tính năng; vẽ lại các hình |
+| 2.2 | 05/11/2026 | HaiLV25 | Điền mã JLCPCB/LCSC; đổi RTC, ăng-ten, đầu nối màn hình, LED xanh; thêm BOM và dự toán PCBA; bỏ giả định dùng bo Waveshare để phát triển |
 
 Đối tượng: thiết kế đồng hồ đeo tay đo sức khỏe gồm hai PCB, edge AI (chạy mô hình trên thiết bị) và web. Thiết kế **chưa được chế tạo**; firmware, mô hình AI, web và layout PCB đều chưa làm. Mọi kết luận dựa trên datasheet, tính toán và công cụ tự động, không có số đo phần cứng.
 
 ## 1. Kết luận
 
-**Sau Rev 2.1, các lỗi sửa được trên giấy đã sửa; thiết kế vẫn chưa sẵn sàng để layout** vì cơ khí và 23 mục BOM chưa chốt, các giả định chưa được đo. Firmware, mô hình AI, web đều chưa làm.
+**Sau Rev 2.2, các lỗi sửa được trên giấy đã sửa; thiết kế vẫn chưa sẵn sàng để layout** vì cơ khí chưa chốt; MAX86141, SFH 7016 và màn hình chưa mua được trên JLCPCB/LCSC; các giả định chưa được đo. Firmware, mô hình AI, web đều chưa làm.
 
-| Đã sửa trong Rev 2.1 | Chi tiết |
+| Đã sửa trong Rev 2.1-2.2 | Chi tiết |
 |---|---|
-| BOM | Bỏ toàn bộ mã LCSC sai; `tools/check_bom.py`: 39 mã khớp, 0 sai, 23 mục chưa có mã (có mục không cần mã: test point, DNP) |
+| BOM | Bỏ mã LCSC sai, điền mã còn thiếu; `tools/check_bom.py`: 59 mã khớp, 0 sai, 3 mục không có mã (SFH 7016, test point, DNP). Mục 7.3 |
 | LED | SFH 7013 ngừng sản xuất → SFH 7016 (symbol, footprint 6 chân, đọc datasheet v1.5) |
 | Mạch | R126 VMID-VSYS không lắp; R105 0805; R113 1 MΩ; linh kiện phối hợp RF 0201; 5 test point bus; MAX86141ENP+T; thông số còi |
 | Kế hoạch | Logic cảnh báo mới; bỏ phân giai đoạn ngủ, stress, gửi vị trí; SpO2 và mẫu mạch không đều thành thử nghiệm; SOS ngoài WiFi chỉ báo tại chỗ |
@@ -89,11 +90,11 @@ Bảng dưới là kết quả rà soát ban đầu; các dòng ghi **Đã sửa
 
 ## 3. Mạch điện
 
-Đã rà từng chân IC với datasheet: ESP32-S3R8, W25Q128JV, AXP2101, TPS61240, BMI270, PCF85063A, MAX86141, MAX30208, LP5907, TXS0108E, USBLC6-2SC6, USB-C, SFH 7013, VEMD8080. Netlist khớp `tools/design.py` trên toàn bộ 532 chân; ERC 0 lỗi, 0 cảnh báo. Không tìm thấy đường cấp nguồn ngược nào trên bo; cực tính MOSFET và diode dập đúng. Chi tiết lỗi đã sửa: `schematic_analysis_report.docx`.
+Đã rà từng chân IC với datasheet: ESP32-S3R8, W25Q128JV, AXP2101, TPS61240, BMI270, PCF85063A, MAX86141, MAX30208, LP5907, TXS0108E, USBLC6-2SC6, USB-C, SFH 7016, VEMD8080. Netlist khớp `tools/design.py` trên toàn bộ 532 chân; ERC 0 lỗi, 0 cảnh báo. Không tìm thấy đường cấp nguồn ngược nào trên bo; cực tính MOSFET và diode dập đúng. Chi tiết lỗi đã sửa: `schematic_analysis_report.docx`.
 
 | # | Mức | Vấn đề | Hệ quả | Xử lý |
 |---|---|---|---|---|
-| E1 | Lớn | Điện áp và trạng thái DCDC1 do OTP (cấu hình nạp sẵn lúc xuất xưởng) quyết định (AXP p.22, p.37). UVP của DCDC2-4 mặc định bật trong khi VIN2-4 để trống | Nếu OTP khác 3,3 V, ESP32 không chạy và firmware không cứu được. Waveshare cùng cách nối là bằng chứng gián tiếp | Đọc toàn bộ thanh ghi trên bo Waveshare; mua đúng mã OTP |
+| E1 | Lớn | Điện áp và trạng thái DCDC1 do OTP (cấu hình nạp sẵn lúc xuất xưởng) quyết định (AXP p.22, p.37). UVP của DCDC2-4 mặc định bật trong khi VIN2-4 để trống | Nếu OTP khác 3,3 V, ESP32 không chạy và firmware không cứu được. Waveshare cùng cách nối là bằng chứng gián tiếp | Đọc toàn bộ thanh ghi trên bo đầu tiên trước khi nối tải; hỏi X-Powers hoặc nhà bán về OTP của mã AXP2101 |
 | E2 | Lớn | VBUS → VSYS chỉ đi qua buck SW, L102, R105; không có liên kết VMID-VSYS (AXP p.17; WS p.1: RP1 không lắp) | Nếu OTP không bật buck: USB không cấp VSYS, không sạc. R105 0402 mang toàn bộ dòng vào | **Đã sửa:** thêm R126 không lắp, R105 0805. Còn phải đo trên bàn thử |
 | E3 | Lớn | FPC 16 chân không đối xứng; cáp đảo đưa VLED 5 V vào `PPG_INT`, `PPG_CS` | Có thể hỏng ESP32 (VIH tối đa VDD + 0,3 V, DS p.65). Loại cáp phụ thuộc cách xếp bo, chưa có bản vẽ | Chốt bằng mô hình giấy; đo thông mạch cáp trước khi cấp nguồn |
 | E4 | Lớn | TXS0108E: VOH tối thiểu 2,21 V so với ESP32 VIH 2,475 V; 1,21 V so với MAX86141 VIH 1,4 V (TXS p.7; DS p.65; MAX p.8) | Không có đảm bảo trường hợp xấu nhất; tải nhẹ nên nhiều khả năng vẫn chạy | Quyết định 3, mục 8 |
@@ -103,7 +104,7 @@ Bảng dưới là kết quả rà soát ban đầu; các dòng ghi **Đã sửa
 
 ## 4. Nguồn và pin
 
-Tự lập lại ngân sách từ dưới lên cho thấy Rev 1.0 lạc quan: thiếu 140 µA của PSRAM (DS p.68), đọc FIFO IMU qua I2C, chuyển trạng thái ngủ/thức, panel ngủ, touch, pull-up TXS. Mức danh định là **11,6 mA, tức 27,6 h**. Biên so với mục tiêu 24 h chỉ khoảng 15 % ở pin mới. **Đa số đầu vào là giả định**, phải đo trên bo Waveshare trước khi chốt. Cột xấu nhất cộng dồn mọi cực trị nên chỉ là biên. Các sửa trong Rev 2.1 (R113, bỏ model giấc ngủ) giảm dưới 0,1 mA nên chưa tính lại; burst 100 mẫu/s cho PRV thêm khoảng 0,16-0,23 mA cũng chưa tính.
+Tự lập lại ngân sách từ dưới lên cho thấy Rev 1.0 lạc quan: thiếu 140 µA của PSRAM (DS p.68), đọc FIFO IMU qua I2C, chuyển trạng thái ngủ/thức, panel ngủ, touch, pull-up TXS. Mức danh định là **11,6 mA, tức 27,6 h**. Biên so với mục tiêu 24 h chỉ khoảng 15 % ở pin mới. **Đa số đầu vào là giả định**, phải đo trên bo đầu tiên trước khi chốt. Pin chọn trên JLCPCB là 390 mAh, thấp hơn 400 mAh khoảng 2,5 %, nên danh định còn khoảng 26,9 h. Cột xấu nhất cộng dồn mọi cực trị nên chỉ là biên. Các sửa trong Rev 2.1 (R113, bỏ model giấc ngủ) giảm dưới 0,1 mA nên chưa tính lại; burst 100 mẫu/s cho PRV thêm khoảng 0,16-0,23 mA cũng chưa tính.
 
 {{fig|budget_life|Thời lượng pin theo kịch bản so với mục tiêu 24 h.|15}}
 
@@ -172,7 +173,7 @@ Hình 3 đã đưa các yêu cầu này vào kế hoạch, nhưng chưa có thi�
 | H6 | Lớn | Không có xử lý lỗi. Một bus I2C chung cho PMIC, IMU, RTC, touch, MAX30208, kéo qua FPC | Một slave giữ SDA là mất cả PMIC và IMU; chỉ khôi phục được bằng tắt nguồn | Khôi phục bus 9 xung, timeout, TWDT, ngưỡng pin cho SOS, phát hiện tháo tay |
 | H7 | Lớn | RTC cấp từ DCDC1, không đồng bộ giờ | Tắt PMIC là mất giờ; dữ liệu offline mang giờ sai | Cấp từ VRTC nếu mức áp hợp, đọc cờ OS, SNTP mỗi lần kết nối |
 | H8 | Lớn | Chức năng không có chủ: quản lý nguồn/AXP_IRQ, MAX30208, lưu flash, đồng bộ giờ, provisioning, OTA, BLE GATT, tháo tay, chẩn đoán, ghi dữ liệu thô | Khối lượng firmware bị đánh giá thấp | Thêm vào kiến trúc task; gán người làm |
-| H9 | Lớn | Không có kế hoạch thử và lịch; mục "kiểm tra" chỉ xét thiết kế | Không biết khi nào xong | Lập lịch ngược; firmware trên Waveshare trước PCB; bring-up theo rail → I2C → SPI → RF |
+| H9 | Lớn | Không có kế hoạch thử và lịch; mục "kiểm tra" chỉ xét thiết kế | Không biết khi nào xong | Lập lịch ngược; firmware trên ESP32-S3 DevKit trước PCB; bring-up theo rail → I2C → SPI → RF |
 | H10 | Lớn | "Sự kiện kèm vị trí" không có nguồn nếu hiểu là vị trí địa lý; không có GNSS | Tính năng không có dữ liệu | **Đã bỏ** khỏi kế hoạch |
 | H11 | Nhỏ | Chế độ ngủ không nhất quán: cảm biến liên tục loại trừ deep sleep, PSRAM mất dữ liệu khi deep sleep (chưa kiểm chứng); BMI270 không có high-g | Chân "đánh thức deep sleep" không có use case | Định nghĩa máy trạng thái nguồn; dùng any-motion |
 | H12 | Nhỏ | Đệm flash, màn hình chưa đặc tả: ghi đè một sector mỗi phút hết 100k chu kỳ sau 69 ngày; frame 434 KB | Mòn flash; chưa biết fps | Log vòng/LittleFS; đo tải LVGL; PPG và màn dùng host SPI khác nhau |
@@ -195,19 +196,19 @@ Tra cứu LCSC ngày 05/11/2026. Các mã dưới đây đã được thay hoặ
 | C23733 | 4,7 µF footprint 0603 | Vỏ 0402, hết hàng | C114 |
 | C506807, C22381 | FH12, 0,1 Ω | Không có kết quả | J105, J201, R112... |
 
-Mã đã xác nhận mới: C19666 (4,7 µF 0603), C17477 (0 Ω 0805), C26083 (1 MΩ). C9010 trên LCSC ghi rõ 40 MHz, ±10 ppm, 15 pF, nên thạch anh Y101 hợp với cặp tụ 22 pF. Còn thiếu mã: toàn bộ cuộn cảm, shunt, NTC, thạch anh 32 kHz, ăng-ten, FH12, BAT54WS, 499 Ω, linh kiện RF 0201. Không có dòng BOM: panel, cell pin, cáp FFC, đầu cắm PicoBlade.
+Mã đã xác nhận mới: C19666 (4,7 µF 0603), C17477 (0 Ω 0805), C26083 (1 MΩ). C9010 trên LCSC ghi rõ 40 MHz, ±10 ppm, 15 pF, nên thạch anh Y101 hợp với cặp tụ 22 pF. Xem danh sách mã mới ở mục 7.3.
 
 ### 7.2 Vấn đề chế tạo
 
 | # | Mức | Vấn đề | Xử lý |
 |---|---|---|---|
-| M1 | Đã xử lý | Nhiều mã BOM sai (mục 7.1) | **Đã sửa:** không còn mã sai; `tools/check_bom.py` kiểm tự động. Tìm mã theo từ khóa bị LCSC chặn, nên 23 mục còn lại phải chọn thủ công |
-| M2 | Đã xử lý | SFH 7013 ngừng sản xuất (ams-OSRAM ghi 停产), LCSC hết hàng | **Đã đổi SFH 7016** (ams-OSRAM ghi 量产, Q65112A7849): 1,85×1,65×0,6 mm, cùng 530/655/940 nm, VF xanh tối đa 2,80 V ở 20 mA, chịu xung đủ cho 124 mA (SFH p.5, p.11-12). Chưa có nguồn mua xác nhận |
-| M3 | Chặn | Panel và J104 không có mã đặt được; Waveshare chỉ ghi "0.3-31pin" | Mua panel trước hoặc lấy từ bo Waveshare, đo FPC, rồi chọn đầu nối |
+| M1 | Đã xử lý | Nhiều mã BOM sai (mục 7.1) | **Đã sửa:** không còn mã sai; `tools/check_bom.py` kiểm cả JLCPCB và LCSC |
+| M2 | Đã xử lý | SFH 7013 ngừng sản xuất (ams-OSRAM ghi 停产), LCSC hết hàng | **Đã đổi SFH 7016** (ams-OSRAM ghi 量产, Q65112A7849): 1,85×1,65×0,6 mm, cùng 530/655/940 nm, VF xanh tối đa 2,80 V ở 20 mA, chịu xung đủ cho 124 mA (SFH p.5, p.11-12). Không có trên JLCPCB/LCSC; tồn kho ở DigiKey và RS khác nhau theo trang, cần xác nhận trước khi đặt |
+| M3 | Chặn | Panel 1,75" không có trên JLCPCB/LCSC. Đã chọn J104 = HDGC 0.3K-HX-31PWB (C2919530), nhưng sơ đồ chân mới lấy từ mạch tham khảo | Chốt nhà cung cấp panel; đối chiếu chân, mặt tiếp xúc, IC cảm ứng rồi mới layout |
 | M4 | Lớn | Kích thước: tổng courtyard bo chính 1.032 mm², bo cảm biến 280 mm². Đĩa ⌀44 mm khoảng 1.520 mm². Có hệ số đi dây 1,4, bo chính cần khoảng 1.450 mm² nên phải 2 mặt | Ước tính dày khoảng 16 mm, vỏ khoảng ⌀50 mm: chỉ vừa cho mẫu demo dày. Thay SOIC-8 bằng WSON, TSSOP-20, PicoBlade, header 2,54 mm, dùng FPC 0,3 mm |
 | M5 | Lớn | MAX30208 chỉ chịu reflow +220 °C (p.2), SAC305 khoảng 245 °C | Hàn sau cùng bằng Sn-Bi, hoặc hỏi ADI |
-| M6 | Lớn | MAX86141 nguồn cung: LCSC 0, DigiKey "Discontinued at DigiKey"; tình trạng ở ADI chưa kiểm | Mua sẵn ≥ 5 con trước khi layout |
-| M7 | Lớn | Ăng-ten: yêu cầu góc bo và khoảng cấm khoảng 6,5×6,5 mm (Johanson Rev 4.0); bo tròn không có góc; cạnh panel, pin, cổ tay | Vát một cạnh bo; chỉnh trong vỏ trên cổ tay; thêm cổng RF không lắp; hoặc dùng module ESP32-S3-MINI-1 |
+| M6 | Chặn | MAX86141ENP+T: JLCPCB và LCSC đều 0. Octopart ghi trạng thái production; DigiKey và Farnell hiện có hàng trên trang chưa rõ ngày; "Discontinued" ở DigiKey là mã không có +T. Tình trạng ở ADI chưa kiểm | Xác nhận nguồn hàng và cách đưa vào PCBA. Không đổi sang MAXM86161 vì một photodiode, tối ưu cho tai, chưa chứng minh được không ảnh hưởng kết quả |
+| M7 | Lớn | Ăng-ten: mã mới 2450AT18D yêu cầu đặt sát cạnh bo và có vùng cấm đồng (Johanson Ver. 4.4 p.2); mã cũ hết hàng; cạnh panel, pin, cổ tay | Vát một cạnh bo; chỉnh trong vỏ trên cổ tay; thêm cổng RF không lắp; hoặc dùng module ESP32-S3-MINI-1 |
 | M8 | Lớn | Nút TS-1088 bấm vuông góc mặt bo, không bấm được qua thành vỏ | Nút góc vuông hoặc cần gạt; RESET/BOOT chuyển thành pad |
 | M9 | Lớn | Quang học và vỏ chưa định nghĩa: không có IP, gioăng, vật liệu tiếp xúc da | Định nghĩa cửa sổ, vách, gioăng; mục tiêu IP; vật liệu ISO 10993 |
 | M10 | Lớn | Thiếu ESD ở nút, J103, CC1/CC2; SW102/SW103 nối thẳng CHIP_PU/GPIO0 | TVS điện dung thấp, điện trở nối tiếp |
@@ -217,7 +218,27 @@ Mã đã xác nhận mới: C19666 (4,7 µF 0603), C17477 (0 Ω 0805), C26083 (1
 
 Chưa làm vì phụ thuộc cơ khí: nút góc vuông, ESD ở nút, thay SOIC-8/TSSOP-20/PicoBlade/header, vát cạnh ăng-ten, FB1 sau shunt, NTC gắn cell.
 
-Giá mẫu (ước tính): linh kiện khoảng $70-95 mỗi bộ; 5 bộ gồm PCB 4 lớp, lắp ráp 2 mặt, vỏ in: khoảng $700-1.000, tức $150-200 mỗi cái, chưa gồm VNA và chứng nhận.
+### 7.3 BOM và dự toán PCBA
+
+File: `outputs/bom/health_watch_bom.xlsx`, `outputs/bom/health_watch_main_jlc_bom.csv`, `outputs/bom/health_watch_sensor_jlc_bom.csv`, sinh bằng `tools/gen_bom.py`. Đơn giá và tồn kho đọc từ JLCPCB và LCSC ngày 05/11/2026.
+
+| Mã đổi | Lý do | Ảnh hưởng |
+|---|---|---|
+| PCF85063ATL → PCF85063ATT/AJ (C165608) | Vỏ DFN hết hàng | Cùng họ IC; không có CLKOE, firmware tắt CLKOUT |
+| 2450AT18A100E → 2450AT18D0100E (C2917718) | Hết hàng | Cùng hãng và cỡ; đổi footprint, chân 2-4 nối GND, vẫn phải chỉnh trong vỏ |
+| LED xanh C72043 → KT-0603G (C12624) | JLCPCB hết hàng | Chỉ là LED báo trạng thái |
+| Đầu nối màn hình → HDGC 0.3K-HX-31PWB (C2919530) | Trước đây chưa có mã | Footprint mới; cần đối chiếu với panel |
+
+Không đổi được: MAX86141 (hết hàng), SFH 7016 và màn hình 1,75" (không có trên JLCPCB/LCSC). File CSV để trống mã của SFH 7016; đơn đặt sẽ thiếu hàng cho đến khi có nguồn.
+
+| Dự toán, phần đã có giá ($) | 2 bộ | 5 bộ |
+|---|---|---|
+| Bo chính | 217,81 | 296,27 |
+| Bo cảm biến | 133,27 | 180,30 |
+| Mua rời (pin, cáp FFC, motor, header) | 4,37 | 10,92 |
+| **Tổng** | **355,45** | **487,48** |
+
+Chưa gồm: SFH 7016, màn hình, PCB 4 lớp, vận chuyển, thuế, vỏ, VNA, phí fixture và handling nếu phát sinh. MAX86141 tính theo giá niêm yết $5,50 khi đang hết hàng. Đặt được chỉ sau khi có layout: số mối hàn đang lấy từ số chân, và JLCPCB yêu cầu panel tối thiểu 70×70 mm có viền kỹ thuật.
 
 ## 8. Quyết định và lộ trình
 
@@ -228,22 +249,22 @@ Giá mẫu (ước tính): linh kiện khoảng $70-95 mỗi bộ; 5 bộ gồm 
 | 3 | TXS0108E, SFH 7013 | Giữ TXS và đo ở 4 MHz trên bo mẫu (TP112, TP113). Đã đổi sang SFH 7016 | SPI chịu +6 V nên có phương án bỏ TXS (nối thẳng SCLK, SDI, CSB; chỉ SDO qua buffer), nhưng cần chọn linh kiện |
 | 4 | Cơ khí | Chấp nhận mẫu dày khoảng 16 mm; chốt vỏ, panel, cell, cáp FPC bằng mô hình giấy trước khi layout | Mọi ràng buộc PCB phụ thuộc mục này |
 
-**Giai đoạn A: trên bo Waveshare 1.75C, chưa cần PCB**
+**Giai đoạn A: trước PCB, trên ESP32-S3 DevKit và BMI270 breakout**
 
-- Đọc thanh ghi OTP của AXP2101 và đo đường VBUS → VSYS.
-- Đo dòng thực: light-sleep với PSRAM, màn, WiFi. Cập nhật ngân sách pin.
-- Viết firmware lõi: quản lý nguồn, FIFO theo watermark, đồng bộ giờ, provisioning, OTA có rollback, xử lý lỗi.
-- Thử té ngã có ground truth; đo báo động giả/ngày trên nhiều ngày đeo.
+- Viết firmware lõi: FIFO theo watermark, đồng bộ giờ, provisioning, OTA có rollback, xử lý lỗi.
+- Thu dữ liệu IMU và thử té ngã có ground truth; đo báo động giả/ngày trên nhiều ngày đeo.
 
 **Giai đoạn B: trước khi layout**
 
-- Chọn mã cho các mục BOM còn trống, chạy `tools/check_bom.py`. Mua MAX86141, SFH 7016, panel, cell.
+- Chạy `tools/check_bom.py`. Xác nhận nguồn hàng MAX86141, SFH 7016, panel; mua cell.
 - Chốt cơ khí, ăng-ten, quang học; sửa footprint MAX30208 và pad MAX86141 theo AN1891.
 - Đổi linh kiện chiếm diện tích, nút bấm góc vuông; thêm ESD ở nút và CC1/CC2.
 
 **Giai đoạn C: trên bo mẫu**
 
+- Đọc thanh ghi OTP của AXP2101 và đo đường VBUS → VSYS.
 - Bring-up theo rail → I2C → SPI → RF; đo TXS ở 4 MHz; chỉnh ăng-ten trong vỏ.
+- Đo dòng thực: light-sleep với PSRAM, màn, WiFi. Cập nhật ngân sách pin.
 - Đánh giá theo protocol: chia theo người, báo cáo khoảng tin cậy và tỉ lệ loại tín hiệu.
 
 ## 9. Độ tin cậy của báo cáo
@@ -255,13 +276,13 @@ Giá mẫu (ước tính): linh kiện khoảng $70-95 mỗi bộ; 5 bộ gồm 
 | Tính toán | Ghi rõ "tính toán"; phụ thuộc giả định đã nêu |
 | Giả định | Đa số đầu vào ngân sách pin, ESR pin, mô hình nhiệt, kích thước vỏ, giá |
 | Nguồn thứ cấp | Nghiên cứu AF/té ngã, FDA, pháp luật: đọc từ tóm tắt hoặc trích đoạn, cần đọc bản gốc trước khi trích dẫn chính thức |
-| Chưa kiểm được | Mở bằng KiCad 9; datasheet panel CO5300, CST9217, còi, motor, BAT54WS, AO3400A, AN1891; trạng thái sản xuất của MAX86141 ở ADI; toàn bộ hành vi phần cứng |
+| Chưa kiểm được | Mở bằng KiCad 9; datasheet panel CO5300, CST9217, còi, motor, pin, BAT54WS, AO3400A, AN1891; giá PCB thật; trạng thái sản xuất của MAX86141 ở ADI; toàn bộ hành vi phần cứng |
 
-**Giới hạn:** con số 40 h trong Rev 1.0 đã được thay. Footprint SFH 7016 đọc từ bản vẽ, chưa thử in stencil. Kiểm tra `tools/facts.py` chỉ xác nhận mẫu văn bản có trên trang, không so giá trị số. Các nguồn đã tra: ams-OSRAM (SFH 7013; SFH 7016 datasheet v1.5), LCSC, DigiKey, JLCPCB, Johanson 2450AT18A0100001E Rev 4.0, PPG-DaLiA, WESAD, WEDA-FALL, MIMIC PERform AF, Nghị định 356/2025/NĐ-CP (thuvienphapluat.vn). Link datasheet: `docs/datasheets/README.md`.
+**Giới hạn:** con số 40 h trong Rev 1.0 đã được thay. Footprint SFH 7016 đọc từ bản vẽ, chưa thử in stencil. Kiểm tra `tools/facts.py` chỉ xác nhận mẫu văn bản có trên trang, không so giá trị số. Các nguồn đã tra: ams-OSRAM (SFH 7013; SFH 7016 datasheet v1.5), LCSC, DigiKey, JLCPCB, Johanson 2450AT18A0100001E Rev 4.0, Johanson 2450AT18D0100 Ver. 4.4, NXP PCF85063A Rev. 7.3, bản vẽ HDGC 0.3K-HX-nPWB, JLCPCB (phí PCBA, năng lực), PPG-DaLiA, WESAD, WEDA-FALL, MIMIC PERform AF, Nghị định 356/2025/NĐ-CP (thuvienphapluat.vn). Link datasheet: `docs/datasheets/README.md`.
 
 {{landscape}}
 
-## Phụ lục A: bản vẽ schematic Rev 1.2
+## Phụ lục A: bản vẽ schematic Rev 1.3
 
 {{fig|main_power|Bo chính: USB-C, AXP2101, pin, shunt đo dòng.|21}}
 

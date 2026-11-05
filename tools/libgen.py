@@ -49,6 +49,25 @@ def symbol(name, ref, value, fp, desc, left=(), right=(), top=(), bottom=(), wid
     return ('\t(symbol "%s" (exclude_from_sim no) (in_bom yes) (on_board yes)\n%s%s\n\t\t(symbol "%s_1_1"\n%s\n\t\t)\n\t)'
             % (name, P, '\n'.join(body), name, '\n'.join(pins)))
 
+def renumber(s, mapping):
+    """Renumber the pins of a symbol block; a pin mapped to None is removed."""
+    out, i = [], 0
+    while True:
+        j = s.find('(pin ', i)
+        if j < 0: out.append(s[i:]); break
+        d = 0
+        for e in range(j, len(s)):
+            if s[e] == '(': d += 1
+            elif s[e] == ')':
+                d -= 1
+                if d == 0: break
+        pin = s[j:e + 1]
+        new = mapping[re.search(r'\(number "([^"]+)"', pin).group(1)]
+        out.append(s[i:j])
+        if new is not None: out.append(re.sub(r'\(number "[^"]+"', '(number "%s"' % new, pin))
+        i = e + 1
+    return ''.join(out)
+
 def extract(path, name, newname=None, value=None, fp=None):
     t = open(path, encoding='utf-8').read()
     i = t.index('\n\t(symbol "%s"' % name) + 1
@@ -98,6 +117,13 @@ SYMS = [
  symbol('VEMD8080', 'D', 'VEMD8080', 'HW_Watch:VEMD8080_4.8x2.5mm',
         'Silicon PIN photodiode 4.8 x 2.5 mm, large area, for PPG (VEMD8080 datasheet)',
         left=[('1|2|3|4|6|7|8', 'K', PS)], right=[('5', 'A', PS)], width=7.62, kw='photodiode PPG'),
+ # PCF85063ATT TSSOP-8: NXP datasheet Table 3 (no CLKOE, no n.c.); drawn like the frozen PCF85063ATL symbol
+ renumber(extract(os.path.join(HERE, 'stock_symbols', 'Timer_RTC.kicad_sym'), 'PCF85063ATL', 'PCF85063ATT', 'PCF85063ATT', 'Package_SO:TSSOP-8_3x3mm_P0.65mm'),
+          {'1': '1', '2': '2', '3': None, '4': '3', '5': '4', '6': '5', '7': '6', '8': None, '9': '7', '10': '8'}),
+ # 2450AT18D0100 Johanson Ver. 4.4 p.1, function 1: 1 feed, 2-4 ground
+ symbol('2450AT18D', 'AE', '2450AT18D0100E', 'HW_Watch:Johanson_2450AT18D_3.2x1.6mm',
+        '2.45 GHz edge-mount ceramic antenna, EIA 1206 (Johanson 2450AT18D0100)',
+        left=[('1', 'FEED', PS)], right=[('2', 'GND', PS), ('3', 'GND', PS), ('4', 'GND', PS)], width=12.7, kw='antenna'),
  # SFH 7016 SFH p.13: 1 cathode IR, 2 + 5 common anode, 3 cathode green, 4 cathode red, 6 NC
  symbol('SFH7016', 'D', 'SFH 7016', 'HW_Watch:SFH7016_1.85x1.65mm',
         'Multi-chip LED green 530 nm / red 655 nm / IR 940 nm, common anode (OSRAM SFH 7016 datasheet v1.5)',
@@ -155,6 +181,17 @@ fp(n, 'OSRAM SFH 7016 multi-chip LED 1.85x1.65 mm (datasheet p.13 pinning, p.14 
    [('5', 'rect', -0.65, -0.575, 0.4, 0.4), ('3', 'rect', 0, -0.575, 0.4, 0.4), ('1', 'rect', 0.65, -0.575, 0.4, 0.4),
     ('6', 'rect', -0.65, 0.575, 0.4, 0.4), ('4', 'rect', 0, 0.575, 0.4, 0.4), ('2', 'rect', 0.65, 0.575, 0.4, 0.4)],
    (1.85, 1.65), silk_dot(n, 1.2, -1.0), paste_margin=-0.05)
+# Johanson 2450AT18D0100 land pattern p.2: pads 1.0 x 0.6, 2.0 gap in x, 0.7 gap in y; terminals p.1, top view 4 3 / 1 2
+n = 'Johanson_2450AT18D_3.2x1.6mm'
+fp(n, 'Johanson 2450AT18D0100 2.45 GHz ceramic antenna, keep copper out per datasheet p.2',
+   [('1', 'rect', -1.5, 0.65, 1.0, 0.6), ('2', 'rect', 1.5, 0.65, 1.0, 0.6), ('3', 'rect', 1.5, -0.65, 1.0, 0.6), ('4', 'rect', -1.5, -0.65, 1.0, 0.6)],
+   (3.2, 1.6), silk_dot(n, -2.3, 1.2))
+# HDGC 0.3K-HX-31PWB drawing p.1 (recommended layout) and p.2 (n = 31: B 8.40, C 9.00): odd pins bottom row 0.67 long, even pins top row 0.50 long, 2.48 between rows, pads 0.20 wide (dimension in brackets),
+# pegs 0.35 x 1.00, 0.80 outside the last pin, 0.10 above the lower edge of the bottom row
+n = 'FPC_HDGC_0.3K-HX-31PWB'
+fp(n, 'HDGC 0.3K-HX-31PWB, 0.3 mm pitch, 31 pin FPC connector, top contact',
+   [(str(i), 'rect', round(-4.5 + 0.3 * (i - 1), 2), (1.49 if i % 2 else -1.575), 0.2, (0.67 if i % 2 else 0.5)) for i in range(1, 32)] + [('MP', 'rect', -5.3, 1.225, 0.35, 1.0), ('MP', 'rect', 5.3, 1.225, 0.35, 1.0)],
+   (10.95, 3.3), silk_dot(n, -4.5, 2.5))
 # coin vibration motor (10 mm, flying leads soldered to two pads): ASSUME generic
 n = 'Motor_Pads_2x1.5mm'
 fp(n, 'Two solder pads for a coin vibration motor with wire leads (1027 type)', [('1', 'rect', -1.25, 0, 1.5, 1.5), ('2', 'rect', 1.25, 0, 1.5, 1.5)], (4.0, 1.5))

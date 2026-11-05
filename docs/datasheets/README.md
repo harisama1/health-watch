@@ -9,6 +9,9 @@ Datasheet thuộc bản quyền của các hãng nên repo public chỉ ghi link
 | AXP | `LCSC_C3036461_AXP2101.pdf` | https://datasheet.lcsc.com/datasheet/pdf/4f32bb3c83a61e426b4e09c536b24324.pdf |
 | MAX | `LCSC_C5328762_MAX86141.pdf` | https://datasheet.lcsc.com/datasheet/pdf/1b56645c68829ff2d7fd003b7bd91a43.pdf |
 | M30 | `LCSC_C2874216_MAX30208.pdf` | https://datasheet.lcsc.com/datasheet/pdf/563d638fdd3523dd5760ec7178c4a6f5.pdf |
+| RTC | `PCF85063A.pdf` | https://www.nxp.com/docs/en/data-sheet/PCF85063A.pdf |
+| ANT | `Johanson_2450AT18D0100.pdf` | https://datasheet.lcsc.com/datasheet/pdf/43cf7506e0cad9725529346917105458.pdf |
+| FPC | `HDGC_0.3K-HX-nPWB.pdf` | https://datasheet.lcsc.com/datasheet/pdf/a443f3b35bf2c7fb425b32754489b934.pdf |
 | BMI | `Bosch_BMI270_datasheet.pdf` | https://www.bosch-sensortec.com/media/boschsensortec/downloads/datasheets/bst-bmi270-ds000.pdf |
 | TPS | `LCSC_C133991_TPS61240.pdf` | https://datasheet.lcsc.com/datasheet/pdf/91a1f9e8f79a4c3caf35dfe137175767.pdf |
 | TXS | `LCSC_C17206_TXS0108E.pdf` | https://datasheet.lcsc.com/datasheet/pdf/3d1219eaadc44a01a8b9ea151a0ff2ba.pdf |
