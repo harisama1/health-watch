@@ -8,7 +8,7 @@
 | `3_SoDoKhoi/` | Sơ đồ khối phần cứng, cây nguồn + điểm đo dòng, luồng dữ liệu edge AI → web (PNG + SVG) |
 | `4_TrichDan/` | `citations.pdf`: bảng trích dẫn (29 số liệu đã đối chiếu đúng trang PDF + tài liệu của từng linh kiện); `datasheets/`: toàn bộ tài liệu gốc |
 | `5_NguonSinh/` | Script sinh lại toàn bộ (design.py = nguồn sự thật: linh kiện, net, lý do, trích dẫn) |
-| `6_BOM/` | BOM và dự toán PCBA JLCPCB: `health_watch_bom.xlsx`, CSV cho từng bo. MAX86141, SFH 7016 và màn hình chưa mua được trên JLCPCB/LCSC |
+| `6_BOM/` | BOM và dự toán PCBA JLCPCB: `health_watch_bom.xlsx`, CSV cho từng bo; BOM giai đoạn module: `health_watch_module_bom.xlsx`. MAX86141, SFH 7016 và màn hình chưa mua được trên JLCPCB/LCSC |
 
 Kiểm tra: ERC 0 lỗi / 0 cảnh báo cả 2 bo; netlist khớp design.py theo từng chân; 29/29 trích dẫn số liệu khớp trang PDF.
 Chưa làm: layout PCB, chạy thật trên phần cứng. Việc còn mở: xem mục 9 của báo cáo.

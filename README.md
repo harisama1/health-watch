@@ -6,6 +6,7 @@
 - Schematic: [bo chính](outputs/health_watch_main_schematic.pdf), [bo cảm biến](outputs/health_watch_sensor_schematic.pdf); project KiCad: [hardware/](hardware/)
 - Sơ đồ khối: [block_diagram.png](outputs/block_diagram.png), [power_tree.png](outputs/power_tree.png), [data_flow.png](outputs/data_flow.png)
 - BOM và dự toán PCBA JLCPCB: [health_watch_bom.xlsx](outputs/bom/health_watch_bom.xlsx), [CSV bo chính](outputs/bom/health_watch_main_jlc_bom.csv), [CSV bo cảm biến](outputs/bom/health_watch_sensor_jlc_bom.csv)
+- BOM giai đoạn module (linh kiện rời, link tìm Shopee): [health_watch_module_bom.xlsx](outputs/bom/health_watch_module_bom.xlsx)
 - Trích dẫn: [citations.pdf](outputs/citations.pdf); datasheet: [bảng link tải](docs/datasheets/README.md) (repo không kèm PDF của hãng)
 - Gói nộp đầy đủ: [deliverable/DoAn_DongHo_SucKhoe/](deliverable/DoAn_DongHo_SucKhoe/)
 
@@ -32,6 +33,7 @@ python3 tools/libgen.py                     # thư viện
 python3 tools/design.py                     # kiểm tra nhanh (trùng ref, net 1 chân, I2C, FPC)
 python3 tools/check_bom.py                  # đối chiếu mã với JLCPCB và LCSC, rc=1 nếu sai
 python3 tools/gen_bom.py                    # sinh BOM và dự toán, cần openpyxl
+python3 tools/gen_module_bom.py             # sinh BOM giai đoạn module, cần openpyxl
 for b in main sensor; do
   python3 tools/gen_sch.py $b hardware/$b/health_watch_$b.kicad_sch
   kicad-cli sch erc --severity-all --exit-code-violations -o /tmp/$b.rpt hardware/$b/health_watch_$b.kicad_sch
